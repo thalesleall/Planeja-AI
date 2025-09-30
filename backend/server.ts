@@ -5,6 +5,10 @@ import rateLimit from "express-rate-limit";
 import compression from "compression";
 import dotenv from "dotenv";
 
+// Importar rotas
+import supabaseRoutes from "./src/routes/supabase";
+import apiRoutes from "./src/routes/api";
+
 // Carregar variáveis de ambiente
 dotenv.config();
 
@@ -128,13 +132,33 @@ app.get("/api/v1", (req: Request, res: Response) => {
     version: "1.0.0",
     documentation: "/api/v1/docs",
     endpoints: {
-      // Aqui você pode listar os endpoints disponíveis
-      users: "/api/v1/users",
-      plans: "/api/v1/plans",
-      tasks: "/api/v1/tasks"
+      // Autenticação
+      register: "POST /api/v1/auth/register",
+      login: "POST /api/v1/auth/login",
+      profile: "GET /api/v1/auth/me",
+      
+      // Tarefas
+      tasks: "GET /api/v1/tasks",
+      pendingTasks: "GET /api/v1/tasks/pending",
+      completedTasks: "GET /api/v1/tasks/completed",
+      createTask: "POST /api/v1/tasks",
+      completeTask: "PUT /api/v1/tasks/:id/complete",
+      deleteTask: "DELETE /api/v1/tasks/:id",
+      
+      // Utilitários
+      supabase: "/api/v1/supabase"
     }
   });
 });
+
+// Rotas da API v1
+app.use("/api/v1", apiRoutes);
+
+// Rotas do Supabase
+app.use("/api/v1", supabaseRoutes);
+
+// Rotas principais da API
+app.use("/api/v1", apiRoutes);
 
 // =============================================
 // MIDDLEWARE DE TRATAMENTO DE ERROS
@@ -181,13 +205,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // INICIALIZAÇÃO DO SERVIDOR
 // =============================================
 
-const server = app.listen(PORT, () => {
+const server = app.listen(3002, () => {
   console.log(`
 🚀 Planeja-AI Backend Server iniciado com sucesso!
-📍 URL: http://localhost:${PORT}
+📍 URL: http://localhost:3002
 🌍 Ambiente: ${NODE_ENV}
-📊 Health Check: http://localhost:${PORT}/health
-🔄 API v1: http://localhost:${PORT}/api/v1
+📊 Health Check: http://localhost:3002/health
+🔄 API v1: http://localhost:3002/api/v1
 ⏰ Iniciado em: ${new Date().toISOString()}
   `);
 });

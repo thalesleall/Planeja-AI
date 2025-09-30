@@ -32,6 +32,13 @@ export const config = {
   app: {
     name: "Planeja-AI Backend",
     version: "1.0.0",
+  },
+
+  supabase: {
+    url: process.env.SUPABASE_URL || "",
+    anonKey: process.env.SUPABASE_ANON_KEY || "",
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    dbPassword: process.env.SUPABASE_DB_PASSWORD || "",
   }
 };
 

@@ -1,5 +1,9 @@
 import { Request, Response, Router } from "express";
 import config from "../config";
+import authRoutes from "./auth";
+import taskRoutes from "./tasks";
+import listRoutes from "./lists";
+import supabaseRoutes from "./supabase";
 
 const router = Router();
 
@@ -10,34 +14,41 @@ router.get("/", (req: Request, res: Response) => {
     version: config.app.version,
     documentation: "/api/v1/docs",
     endpoints: {
-      // Aqui você pode listar os endpoints disponíveis
-      users: "/api/v1/users",
-      plans: "/api/v1/plans", 
-      tasks: "/api/v1/tasks"
+      // Autenticação
+      register: "POST /api/v1/auth/register",
+      login: "POST /api/v1/auth/login",
+      profile: "GET /api/v1/auth/me",
+      
+      // Listas
+      lists: "GET /api/v1/lists",
+      listDetails: "GET /api/v1/lists/:id",
+      createList: "POST /api/v1/lists",
+      deleteList: "DELETE /api/v1/lists/:id",
+      
+      // Tarefas/Itens
+      tasks: "GET /api/v1/tasks",
+      pendingTasks: "GET /api/v1/tasks/pending",
+      completedTasks: "GET /api/v1/tasks/completed",
+      createTask: "POST /api/v1/lists/:listId/items",
+      completeTask: "PUT /api/v1/tasks/:id/complete",
+      deleteTask: "DELETE /api/v1/tasks/:id",
+      
+      // Utilitários
+      supabase: "/api/v1/supabase"
     }
   });
 });
 
-// Placeholder para futuras rotas
-router.get("/users", (req: Request, res: Response) => {
-  res.json({
-    message: "Endpoint de usuários - Em desenvolvimento",
-    available: false
-  });
-});
+// Rotas de autenticação
+router.use("/auth", authRoutes);
 
-router.get("/plans", (req: Request, res: Response) => {
-  res.json({
-    message: "Endpoint de planos - Em desenvolvimento", 
-    available: false
-  });
-});
+// Rotas de listas
+router.use("/lists", listRoutes);
 
-router.get("/tasks", (req: Request, res: Response) => {
-  res.json({
-    message: "Endpoint de tarefas - Em desenvolvimento",
-    available: false
-  });
-});
+// Rotas de tarefas
+router.use("/tasks", taskRoutes);
+
+// Rotas de utilitários
+router.use("/supabase", supabaseRoutes);
 
 export default router;
