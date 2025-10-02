@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { AnalyticsCards } from '@/components/analytics-cards';
+import { supabase } from '@/lib/supabase';
 import { TaskList } from '@/components/task-list';
 import { AddTaskForm } from '@/components/add-task-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ListTodo } from 'lucide-react';
+import { Task } from '@/lib/supabase';
 
 export default function Home() {
     const [tasks, setTasks] = useState<Task[]>([]);
