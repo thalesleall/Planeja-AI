@@ -7,34 +7,54 @@ import { TaskList } from '@/components/task-list';
 import { AddTaskForm } from '@/components/add-task-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ListTodo } from 'lucide-react';
-import { Task } from '@/lib/supabase';
+import { ToDoItem } from '@/lib/supabase';
 
 export default function Home() {
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [tasks, setTasks] = useState<ToDoItem[]>([]);
     const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
-    const addTask = async (title: string) => {
+    useEffect(() => {
+        const fetchTasks = async () => {
+            const { data, error } = await supabase
+                .from('to_do_item')
+                .select('*')
+                .order('item_order', { ascending: true });
+
+            if (error) {
+                console.error('Erro ao buscar tarefas:', error);
+            } else {
+                setTasks(data);
+            }
+        };
+
+        fetchTasks();
+    }, []);
+
+    // Adicionar tarefa com título e descrição
+    const addTask = async (title: string, description: string | null = null) => {
         try {
             const { data, error } = await supabase
-                .from('tasks')
+                .from('to_do_item')
                 .insert([
                     {
-                        title,
-                        user_id: '00000000-0000-0000-0000-000000000000',
+                        name: title,
+                        list_id: 1,
+                        item_order: tasks.length + 1,
+                        description,
+                        done: false,
                     },
                 ])
                 .select()
                 .single();
 
             if (error) throw error;
-            if (data) {
-                setTasks([data, ...tasks]);
-            }
+            if (data) setTasks([data, ...tasks]);
         } catch (error) {
-            console.error('Error adding task:', error);
+            console.error('Erro ao adicionar tarefa:', error);
         }
     };
 
+    // Sugestão da AI
     const handleAISuggest = async () => {
         try {
             const response = await fetch('/api/suggest-task', {
@@ -42,39 +62,55 @@ export default function Home() {
                 headers: { 'Content-Type': 'application/json' },
             });
 
-            if (!response.ok) throw new Error('Failed to get suggestion');
+            if (!response.ok) throw new Error('Falha ao obter sugestão');
 
             const { suggestion } = await response.json();
             await addTask(suggestion);
         } catch (error) {
-            console.error('Error getting AI suggestion:', error);
+            console.error('Erro ao obter sugestão AI:', error);
         }
     };
 
-    const toggleComplete = async (taskId: string, completed: boolean) => {
+    // Marcar tarefa como completa
+    const toggleComplete = async (id: number, completed: boolean) => {
         try {
             const { error } = await supabase
-                .from('tasks')
-                .update({ completed, updated_at: new Date().toISOString() })
-                .eq('id', taskId);
+                .from('to_do_item')
+                .update({ done: completed })
+                .eq('id', id);
 
             if (error) throw error;
-            setTasks(
-                tasks.map((task) =>
-                    task.id === taskId ? { ...task, completed } : task
-                )
-            );
+
+            setTasks(tasks.map((task) => (task.id === id ? { ...task, done: completed } : task)));
         } catch (error) {
-            console.error('Error updating task:', error);
+            console.error('Erro ao atualizar tarefa:', error);
         }
     };
 
-    const completedTasks = tasks.filter((task) => task.completed).length;
-    const pendingTasks = tasks.filter((task) => !task.completed).length;
+    // Atualizar nome ou descrição da tarefa
+    const updateTask = async (id: number, fields: { name?: string; description?: string | null }) => {
+        try {
+            const { data, error } = await supabase
+                .from('to_do_item')
+                .update(fields)
+                .eq('id', id)
+                .select()
+                .single();
 
-    const filteredTasks = tasks.filter((task) => {
-        if (filter === 'pending') return !task.completed;
-        if (filter === 'completed') return task.completed;
+            if (error) throw error;
+
+            setTasks(tasks.map((task) => (task.id === id ? data : task)));
+        } catch (error) {
+            console.error('Erro ao atualizar tarefa:', error);
+        }
+    };
+
+    const completedTasks = tasks.filter((t) => t.done).length;
+    const pendingTasks = tasks.filter((t) => !t.done).length;
+
+    const filteredTasks = tasks.filter((t) => {
+        if (filter === 'pending') return !t.done;
+        if (filter === 'completed') return t.done;
         return true;
     });
 
@@ -86,10 +122,7 @@ export default function Home() {
                     <h1 className="text-4xl font-bold text-slate-900">Minhas Tarefas</h1>
                 </div>
 
-                <AnalyticsCards
-                    completedTasks={completedTasks}
-                    pendingTasks={pendingTasks}
-                />
+                <AnalyticsCards completedTasks={completedTasks} pendingTasks={pendingTasks} />
 
                 <AddTaskForm onAddTask={addTask} onAISuggest={handleAISuggest} />
 
@@ -104,6 +137,7 @@ export default function Home() {
                         <TaskList
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
+                            onUpdateTask={updateTask}
                         />
                     </TabsContent>
 
@@ -111,6 +145,7 @@ export default function Home() {
                         <TaskList
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
+                            onUpdateTask={updateTask}
                         />
                     </TabsContent>
 
@@ -118,6 +153,7 @@ export default function Home() {
                         <TaskList
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
+                            onUpdateTask={updateTask}
                         />
                     </TabsContent>
                 </Tabs>

@@ -5,11 +5,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type Task = {
-  id: string;
-  title: string;
-  completed: boolean;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
+export type ToDoItem = {
+  id: number;
+  list_id: number;
+  item_order: number;
+  name: string;
+  description: string | null;
+  done: boolean;
 };
