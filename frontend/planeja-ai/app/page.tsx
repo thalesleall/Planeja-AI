@@ -8,6 +8,7 @@ import { AddTaskForm } from '@/components/add-task-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ListTodo } from 'lucide-react';
 import { ToDoItem } from '@/lib/supabase';
+import { TaskState } from '@/@types/task';
 
 export default function Home() {
     const [tasks, setTasks] = useState<ToDoItem[]>([]);
@@ -126,7 +127,7 @@ export default function Home() {
 
                 <AddTaskForm onAddTask={addTask} onAISuggest={handleAISuggest} />
 
-                <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
+                <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as TaskState)}>
                     <TabsList className="grid w-full max-w-md grid-cols-3">
                         <TabsTrigger value="all">Todas</TabsTrigger>
                         <TabsTrigger value="pending">Pendentes</TabsTrigger>
