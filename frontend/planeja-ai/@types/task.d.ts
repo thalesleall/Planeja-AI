@@ -1,0 +1,1 @@
+export type TaskState = 'all' | 'pending' | 'completed';

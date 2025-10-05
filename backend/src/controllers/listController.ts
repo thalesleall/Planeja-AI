@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { supabase } from '../config/supabase';
-import '../types/express';
 
 export class ListController {
   // GET /lists
