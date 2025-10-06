@@ -204,17 +204,40 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // =============================================
 // INICIALIZAÇÃO DO SERVIDOR
 // =============================================
+import https from "https";
+import fs from "fs";
 
-const server = app.listen(3002, () => {
-  console.log(`
+const certPath = "/etc/nginx/certs/fullchain.pem";
+const keyPath = "/etc/nginx/certs/privkey.pem";
+let server;
+
+if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  const options = {
+    cert: fs.readFileSync(certPath),
+    key: fs.readFileSync(keyPath),
+  };
+  server = https.createServer(options, app).listen(PORT, () => {
+    console.log(`
 🚀 Planeja-AI Backend Server iniciado com sucesso!
-📍 URL: http://localhost:3002
+📍 URL: https://localhost:${PORT}
 🌍 Ambiente: ${NODE_ENV}
-📊 Health Check: http://localhost:3002/health
-🔄 API v1: http://localhost:3002/api/v1
+📊 Health Check: https://localhost:${PORT}/health
+🔄 API v1: https://localhost:${PORT}/api/v1
 ⏰ Iniciado em: ${new Date().toISOString()}
-  `);
-});
+    `);
+  });
+} else {
+  server = app.listen(PORT, () => {
+    console.log(`
+🚀 Planeja-AI Backend Server iniciado com sucesso!
+📍 URL: http://localhost:${PORT}
+🌍 Ambiente: ${NODE_ENV}
+📊 Health Check: http://localhost:${PORT}/health
+🔄 API v1: http://localhost:${PORT}/api/v1
+⏰ Iniciado em: ${new Date().toISOString()}
+    `);
+  });
+}
 
 // Graceful shutdown
 process.on("SIGTERM", () => {

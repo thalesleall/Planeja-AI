@@ -1,0 +1,15 @@
+**/.git
+**/.idea
+**/node_modules
+**/.next
+**/dist
+
+# Ignore backend files for frontend build
+backend/
+
+# Ignore frontend files for backend build
+frontend/
+
+# Ignore infra files for both builds
+infra/
+docker-compose.yml
