@@ -122,7 +122,7 @@ Planeja-AI/
 1. **Clone o repositório:**
 
    ```bash
-   git clone https://github.com/josedudias/Planeja-AI.git
+   git clone https://github.com/memento-marcio-org/Planeja-AI.git
    cd Planeja-AI
    ```
 
@@ -230,7 +230,7 @@ Este projeto foi desenvolvido como trabalho acadêmico e é de uso educacional.
 
 ## 🔗 Links Úteis
 
-- [Repositório da Organização](https://github.com/josedudias/Planeja-AI)
+- [Repositório da Organização](https://github.com/memento-marcio-org/Planeja-AI)
 - [Documentação do Next.js](https://nextjs.org/docs)
 - [Documentação do Supabase](https://supabase.com/docs)
 - [Express.js Guide](https://expressjs.com/)
