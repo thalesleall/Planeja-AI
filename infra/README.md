@@ -52,4 +52,4 @@ The `generate-certs.sh` script can be used to generate the necessary certificate
 ## Responsible
 
 - [Gabriel Davi Lopes Jacobini](https://www.linkedin.com/in/gabriel-davi-lopes-jacobini-57168a272/)
-
+- [Diego Murari](https://www.linkedin.com/in/diego-murari/)
