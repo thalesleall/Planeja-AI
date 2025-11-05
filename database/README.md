@@ -4,6 +4,8 @@
 
 This repository contains the logical data model for a simple ToDo application implemented with PostgreSQL (naming convention: **snake_case**). The model is designed for use with Supabase (Postgres) and includes tables for users, plans, lists, items and steps. The schema aims to be simple, consistent and ready for production improvements (indexes, constraints, timestamps, RLS rules).
 
+**NoSQL Implementation:** Leticia Cristina Silva (RA: 21352)
+
 ---
 
 ## Tables and columns

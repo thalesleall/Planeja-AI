@@ -10,6 +10,10 @@ import cookieParser from 'cookie-parser';
 import supabaseRoutes from "./src/routes/supabase";
 import apiRoutes from "./src/routes/api";
 
+// Importar MongoDB
+import { connectMongoDB } from "./src/config/mongodb";
+import { initAttachmentModel } from "./src/controllers/attachmentController";
+
 // Carregar variáveis de ambiente
 dotenv.config();
 
@@ -245,6 +249,17 @@ if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
 initRealtime(server as any).catch((err) => {
   console.error('Failed to initialize realtime:', err);
 });
+
+// Initialize MongoDB for attachments
+connectMongoDB()
+  .then(() => {
+    initAttachmentModel();
+    console.log('✅ MongoDB attachment system ready');
+  })
+  .catch((err) => {
+    console.warn('⚠️ MongoDB not available. Attachments will be disabled.');
+    console.warn('💡 To enable attachments, install MongoDB: docker run -d -p 27017:27017 mongo');
+  });
 
 // Note: cookieParser is mounted earlier in the middleware chain; do not mount twice.
 
