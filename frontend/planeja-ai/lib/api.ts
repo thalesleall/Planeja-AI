@@ -129,6 +129,18 @@ export const chats = {
   postMessage: (payload: unknown) => post('/chats/messages', payload),
 };
 
+export const attachments = {
+  upload: async (taskId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('taskId', taskId);
+    return post('/attachments/upload', formData);
+  },
+  list: (taskId: string) => get(`/attachments/task/${taskId}`),
+  delete: (attachmentId: string) => del(`/attachments/${attachmentId}`),
+  setCover: (attachmentId: string) => put(`/attachments/${attachmentId}/cover`, {}),
+};
+
 // AI / local helper — the suggestion endpoint is a Next.js server route under /api
 export const ai = {
   suggest: async (input?: unknown) => {
@@ -146,6 +158,6 @@ export const ai = {
   },
 };
 
-export const api = { auth, lists, tasks, chats, ai, get, post, put, del, saveToken };
+export const api = { auth, lists, tasks, chats, attachments, ai, get, post, put, del, saveToken };
 
 export default api;
