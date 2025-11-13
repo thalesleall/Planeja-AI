@@ -93,3 +93,20 @@ export const validateCreateItem = [
     .withMessage('Descrição deve ter no máximo 1000 caracteres'),
   handleValidationErrors
 ];
+
+// Basic prompt validation middleware for chat messages.
+export const validatePrompt = [
+  body('message')
+    .isString()
+    .isLength({ min: 1, max: 5000 })
+    .withMessage('Message must be a non-empty string and under 5000 characters'),
+  body('message').custom((value) => {
+    const forbidden = ['<script>', 'DROP TABLE', 'DELETE FROM', 'rm -rf', 'passwd'];
+    const lower = String(value).toLowerCase();
+    for (const f of forbidden) {
+      if (lower.includes(f.toLowerCase())) throw new Error('Message contains forbidden content');
+    }
+    return true;
+  }),
+  handleValidationErrors
+];

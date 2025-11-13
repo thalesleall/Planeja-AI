@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import compression from "compression";
 import dotenv from "dotenv";
+import cookieParser from 'cookie-parser';
 
 // Importar rotas
 import supabaseRoutes from "./src/routes/supabase";
@@ -62,6 +63,8 @@ app.use(limiter);
 // Middleware para parsear JSON com limite de tamanho
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// parse HttpOnly cookies for refresh token handling
+app.use(cookieParser());
 
 // Middleware de logging
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -157,9 +160,6 @@ app.use("/api/v1", apiRoutes);
 // Rotas do Supabase
 app.use("/api/v1", supabaseRoutes);
 
-// Rotas principais da API
-app.use("/api/v1", apiRoutes);
-
 // =============================================
 // MIDDLEWARE DE TRATAMENTO DE ERROS
 // =============================================
@@ -206,6 +206,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // =============================================
 import https from "https";
 import fs from "fs";
+import { initRealtime } from "./src/lib/realtime";
+import { startRefreshTokenCleanup } from './src/jobs/refreshTokenCleanup';
 
 const certPath = "/etc/nginx/certs/fullchain.pem";
 const keyPath = "/etc/nginx/certs/privkey.pem";
@@ -237,6 +239,21 @@ if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
 ⏰ Iniciado em: ${new Date().toISOString()}
     `);
   });
+}
+
+// Initialize realtime after server is created
+initRealtime(server as any).catch((err) => {
+  console.error('Failed to initialize realtime:', err);
+});
+
+// Note: cookieParser is mounted earlier in the middleware chain; do not mount twice.
+
+// Start in-process refresh-token cleanup job (removes expired refresh tokens)
+// Returns a stop function if needed.
+try {
+  startRefreshTokenCleanup();
+} catch (e) {
+  console.error('Failed to start refresh token cleanup job', e);
 }
 
 // Graceful shutdown
