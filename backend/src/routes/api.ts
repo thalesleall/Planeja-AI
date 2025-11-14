@@ -4,6 +4,7 @@ import authRoutes from "./auth";
 import taskRoutes from "./tasks";
 import listRoutes from "./lists";
 import supabaseRoutes from "./supabase";
+import chatRoutes from "./chats";
 
 const router = Router();
 
@@ -47,6 +48,9 @@ router.use("/lists", listRoutes);
 
 // Rotas de tarefas
 router.use("/tasks", taskRoutes);
+
+// Rotas de chats (AI)
+router.use("/chats", chatRoutes);
 
 // Rotas de utilitários
 router.use("/supabase", supabaseRoutes);

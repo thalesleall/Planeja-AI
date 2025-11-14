@@ -1,55 +1,58 @@
-# Planeja-AI Infrastructure
+# Infraestrutura Planeja-AI
 
-This document outlines the infrastructure setup for the Planeja-AI project, which is managed using Docker and Docker Compose.
+Este documento descreve a configuração da infraestrutura para o projeto Planeja-AI, que é gerenciado usando Docker e Docker Compose.
 
-## Overview
+## Visão Geral
 
-The infrastructure is composed of three main services orchestrated by a root `docker-compose.yml`:
+A infraestrutura é composta por três serviços principais orquestrados por um `docker-compose.yml` na raiz do projeto:
 
-1.  **Frontend:** A Next.js application served by its own NGINX server.
-2.  **Backend:** A Node.js (TypeScript) API.
-3.  **Main NGINX:** A reverse proxy that directs traffic to the frontend and backend services, with SSL termination using a Certificate Chain.
+1.  **Frontend:** Uma aplicação Next.js servida por seu próprio servidor NGINX.
+2.  **Backend:** Uma API Node.js (TypeScript).
+3.  **NGINX Principal:** Um proxy reverso que direciona o tráfego para os serviços de frontend e backend, com terminação SSL.
 
-## Docker Setup
+## Configuração do Docker
 
-### Root `docker-compose.yml`
+### `docker-compose.yml` Raiz
 
-The main `docker-compose.yml` file at the root of the project is responsible for building and running all the services. It orchestrates the frontend, backend, and the main NGINX reverse proxy.
+O arquivo `docker-compose.yml` principal na raiz do projeto é responsável por construir e executar todos os serviços. Ele orquestra o frontend, o backend e o proxy reverso NGINX principal.
 
-### Frontend Service
+### Serviço de Frontend
 
 -   **Dockerfile:** `frontend/planeja-ai/Dockerfile`
--   **Description:** This Dockerfile builds the Next.js frontend application and serves it using NGINX. It's a multi-stage build that first builds the static files from the Next.js app and then copies them into a lightweight NGINX container.
+-   **Descrição:** Este Dockerfile constrói a aplicação frontend Next.js e a serve usando NGINX. É uma compilação de múltiplos estágios que primeiro constrói os arquivos estáticos do aplicativo Next.js e depois os copia para um contêiner NGINX leve.
 
-### Backend Service
+### Serviço de Backend
 
 -   **Dockerfile:** `backend/Dockerfile`
--   **Description:** This Dockerfile builds the Node.js/TypeScript backend API. It compiles the TypeScript code into JavaScript and runs the server.
+-   **Descrição:** Este Dockerfile constrói a API de backend Node.js/TypeScript. Ele compila o código TypeScript para JavaScript e executa o servidor.
 
-## NGINX Configuration
+## Configuração do NGINX
 
-### Main NGINX Reverse Proxy
+### Proxy Reverso NGINX Principal
 
--   **Configuration:** `infra/nginx/default.conf`
--   **Description:** This NGINX instance acts as the main entry point for the application. It's a reverse proxy that:
-    -   Listens on ports 80 and 443.
-    -   Redirects HTTP traffic to HTTPS.
-    -   Terminates SSL using the certificates found in `infra/certificates`.
-    -   Forwards requests to `/api` to the backend service.
-    -   Forwards all other requests to the frontend service.
+-   **Configuração:** `infra/nginx/default.conf`
+-   **Descrição:** Esta instância do NGINX atua como o ponto de entrada principal para a aplicação. É um proxy reverso que:
+    -   Escuta nas portas 80 e 443.
+    -   Redireciona o tráfego HTTP para HTTPS.
+    -   Termina o SSL usando os certificados encontrados em `infra/certificates`.
+    -   Encaminha as requisições para `/api` para o serviço de backend.
+    -   Encaminha todas as outras requisições para o serviço de frontend.
 
-## SSL Certificates
+## Certificados SSL
 
--   **Certificate Generation Script:** `infra/certificates/generate-certs.sh`
--   **Certificates:** `fullchain.pem` and `privkey.pem`
+-   **Script de Geração de Certificado:** `infra/certificates/generate-certs.sh`
+-   **Certificados:** `fullchain.pem` e `privkey.pem`
 
-For local development, self-signed SSL certificates are used to enable HTTPS.
+Para desenvolvimento local, são usados certificados SSL autoassinados para habilitar o HTTPS.
 
-The `generate-certs.sh` script can be used to generate the necessary certificates. The main NGINX server is configured to use `fullchain.pem` and `privkey.pem` for SSL termination.
+O script `generate-certs.sh` pode ser usado para gerar os certificados necessários. O servidor NGINX principal é configurado para usar `fullchain.pem` e `privkey.pem` para a terminação SSL.
 
-**Note:** These are self-signed certificates and should only be used for development purposes. For a production environment, you should use certificates from a trusted Certificate Authority (CA).
+**Nota:** Estes são certificados autoassinados e devem ser usados apenas para fins de desenvolvimento. Para um ambiente de produção, você deve usar certificados de uma Autoridade de Certificação (CA) confiável.
 
-## Responsible
+---
 
-- [Gabriel Davi Lopes Jacobini](https://www.linkedin.com/in/gabriel-davi-lopes-jacobini-57168a272/)
-
+**Desenvolvido por:** Gabriel Davi Lopes Jacobini 24734
+**Papel:** DevOps Engineer 
+**Tecnologia Principal:** Docker Compose + Nginx
+**Data:** Outubro 2025  
+**Disciplina:** Desenvolvimento Web 2

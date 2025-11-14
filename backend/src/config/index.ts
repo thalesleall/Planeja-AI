@@ -34,6 +34,14 @@ export const config = {
     version: "1.0.0",
   },
 
+  cookie: {
+    refreshTokenName: process.env.REFRESH_TOKEN_COOKIE_NAME || 'refreshToken',
+    secure: process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production',
+    sameSite: (process.env.COOKIE_SAMESITE as any) || (process.env.NODE_ENV === 'production' ? 'lax' : 'lax'),
+    domain: process.env.COOKIE_DOMAIN || undefined,
+    maxAgeDays: parseInt(process.env.REFRESH_TOKEN_EXPIRY_DAYS || '7')
+  },
+
   supabase: {
     url: process.env.SUPABASE_URL || "",
     anonKey: process.env.SUPABASE_ANON_KEY || "",
