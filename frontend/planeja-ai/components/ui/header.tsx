@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react";
-import { initSocket, getSocket, closeSocket } from "@/lib/socket";
-import { getToken, refreshToken } from "@/lib/auth";
+import { initSocket, getSocket } from "@/lib/socket";
+import { getToken } from "@/lib/auth";
+import api, { saveToken } from '@/lib/api';
 import { cn } from "@/lib/utils";
 
 export default function Header({ className }: { className?: string }) {
@@ -16,12 +17,6 @@ export default function Header({ className }: { className?: string }) {
         setStatus('disconnected');
         return;
       }
-
-      // expose token refresh helper expected by socket helper
-      (window as any).getNewToken = async () => {
-        const t = await refreshToken();
-        return t;
-      };
 
       const socket = initSocket({ token, autoConnect: true });
 
@@ -42,7 +37,9 @@ export default function Header({ className }: { className?: string }) {
           socket.off('connect', onConnect);
           socket.off('disconnect', onDisconnect);
           socket.off('reconnect_attempt', onConnecting);
-        } catch (e) {}
+        } catch {
+          // ignore
+        }
       };
     })();
   }, []);
@@ -66,15 +63,23 @@ export default function Header({ className }: { className?: string }) {
             className="ml-4 px-3 py-1 rounded bg-gray-100 text-sm"
             onClick={async () => {
               try {
-                // call logout endpoint and clear token
-                await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
-              } catch (e) {
-                console.error('logout call failed', e);
+                // call backend logout which will revoke refresh token cookie
+                await api.auth.logout();
+              } catch (err) {
+                console.error('logout call failed', err);
               }
+
+              // clear local access token
+              saveToken(null);
+
+              // disconnect socket if present
               try {
-                await (window as any).setToken?.(null);
-              } catch (e) {}
-              try { const s = (window as any).getSocket?.(); s && s.disconnect(); } catch (e) {}
+                const s = getSocket();
+                if (s && typeof s.disconnect === 'function') s.disconnect();
+              } catch {
+                // ignore
+              }
+
               // reload to show logged out state
               window.location.reload();
             }}

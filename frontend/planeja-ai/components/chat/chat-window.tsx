@@ -24,19 +24,25 @@ export default function ChatWindow({
   React.useEffect(() => {
     if (!chatId) return;
     let mounted = true;
-    fetch(`/api/v1/chats/${chatId}/messages`)
-      .then((r) => r.json())
-      .then((data) => {
+    import('@/lib/api').then(async ({ default: api }) => {
+      try {
+        const res = await api.chats.getMessages(chatId);
         if (!mounted) return;
-        const list = data?.data ?? data ?? [];
+        if (!res.ok) {
+          console.error('failed to load messages', res.status, res.data);
+          return;
+        }
+        const list = res.data?.data ?? res.data?.items ?? res.data ?? [];
         const normalized = (Array.isArray(list) ? list : []).map((m: any) => ({
           id: m.id ?? m.uuid,
-          role: m.role ?? m.sender ?? (m.user_id ? "user" : "assistant"),
-          content: m.content ?? m.text ?? String(m.message ?? ""),
+          role: m.role ?? m.sender ?? (m.user_id ? 'user' : 'assistant'),
+          content: m.content ?? m.text ?? String(m.message ?? ''),
         }));
         setMessages(normalized);
-      })
-      .catch((err) => console.error("failed to load messages", err));
+      } catch (err) {
+        console.error('failed to load messages', err);
+      }
+    }).catch((err) => console.error('failed to import api', err));
 
     return () => {
       mounted = false;
@@ -83,21 +89,18 @@ export default function ChatWindow({
 
   function sendMessage() {
     if (!message || !chatId) return;
-    const payload = { chat_id: chatId, content: message };
-    // optimistic append
-    setMessages((m) => [...m, { role: "user", content: message }]);
+  // optimistic append
+  setMessages((m) => [...m, { role: 'user', content: message }]);
     setMessage("");
 
-    fetch(`/api/v1/chats/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((r) => r.json())
-      .then((data) => {
+    import('@/lib/api').then(async ({ default: api }) => {
+      try {
+        await api.chats.postMessage({ chat_id: chatId, message });
         // server will stream tokens via socket; final persisted assistant message will be appended on stream:done
-      })
-      .catch((err) => console.error("send failed", err));
+      } catch (err) {
+        console.error('send failed', err);
+      }
+    }).catch((err) => console.error('send failed', err));
   }
 
   return (
