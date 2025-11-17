@@ -3,6 +3,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
+import { AttachmentButton } from './attachment-button';
+import { AttachmentModal } from './attachment-modal';
 
 interface ToDoItemProps {
   tasks: {
@@ -12,15 +14,18 @@ interface ToDoItemProps {
     name: string;
     description: string | null;
     done: boolean;
+    attachmentCount?: number;
   }[];
   onToggleComplete: (taskId: number, completed: boolean) => void;
   onUpdateTask?: (taskId: number, fields: { name?: string; description?: string | null }) => void;
+  onAttachmentsChange?: () => void;
 }
 
-export function TaskList({ tasks, onToggleComplete, onUpdateTask }: ToDoItemProps) {
+export function TaskList({ tasks, onToggleComplete, onUpdateTask, onAttachmentsChange }: ToDoItemProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [modalTaskId, setModalTaskId] = useState<string | null>(null);
 
   if (tasks.length === 0) {
     return (
@@ -95,25 +100,44 @@ export function TaskList({ tasks, onToggleComplete, onUpdateTask }: ToDoItemProp
                 )}
               </div>
 
-              {editingId === task.id ? (
-                <button
-                  onClick={() => handleSave(task.id)}
-                  className="ml-2 btn btn-sm btn-primary"
-                >
-                  Salvar
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleEdit(task)}
-                  className="ml-2 btn btn-sm btn-secondary"
-                >
-                  Editar
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <div onClick={() => setModalTaskId(String(task.id))}>
+                  <AttachmentButton
+                    taskId={String(task.id)}
+                    attachmentCount={task.attachmentCount || 0}
+                    onAttachmentsChange={() => onAttachmentsChange?.()}
+                  />
+                </div>
+                
+                {editingId === task.id ? (
+                  <button
+                    onClick={() => handleSave(task.id)}
+                    className="ml-2 btn btn-sm btn-primary"
+                  >
+                    Salvar
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleEdit(task)}
+                    className="ml-2 btn btn-sm btn-secondary"
+                  >
+                    Editar
+                  </button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
       ))}
+      
+      {modalTaskId && (
+        <AttachmentModal
+          taskId={modalTaskId}
+          isOpen={!!modalTaskId}
+          onClose={() => setModalTaskId(null)}
+          onAttachmentsChange={() => onAttachmentsChange?.()}
+        />
+      )}
     </div>
   );
 }

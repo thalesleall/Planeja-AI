@@ -15,21 +15,35 @@ export default function Home() {
     const [tasks, setTasks] = useState<ToDoItem[]>([]);
     const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
-    useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                const res = await api.tasks.get();
-                if (!res.ok) {
-                    console.error('Erro ao buscar tarefas:', res.status, res.data);
-                    return;
-                }
-                const items = res.data?.items ?? res.data?.data ?? [];
-                setTasks(items);
-            } catch (err) {
-                console.error('Erro ao buscar tarefas:', err);
+    const fetchTasks = async () => {
+        try {
+            const res = await api.tasks.get();
+            if (!res.ok) {
+                console.error('Erro ao buscar tarefas:', res.status, res.data);
+                return;
             }
-        };
+            const items = res.data?.items ?? res.data?.data ?? [];
+            
+            // Fetch attachment counts for each task
+            const tasksWithCounts = await Promise.all(
+                items.map(async (task: ToDoItem) => {
+                    try {
+                        const attachRes = await api.attachments.list(String(task.id));
+                        const count = attachRes.ok ? (attachRes.data?.attachments?.length || 0) : 0;
+                        return { ...task, attachmentCount: count };
+                    } catch {
+                        return { ...task, attachmentCount: 0 };
+                    }
+                })
+            );
+            
+            setTasks(tasksWithCounts);
+        } catch (err) {
+            console.error('Erro ao buscar tarefas:', err);
+        }
+    };
 
+    useEffect(() => {
         fetchTasks();
     }, []);
 
@@ -131,6 +145,7 @@ export default function Home() {
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
                             onUpdateTask={updateTask}
+                            onAttachmentsChange={fetchTasks}
                         />
                     </TabsContent>
 
@@ -139,6 +154,7 @@ export default function Home() {
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
                             onUpdateTask={updateTask}
+                            onAttachmentsChange={fetchTasks}
                         />
                     </TabsContent>
 
@@ -147,6 +163,7 @@ export default function Home() {
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
                             onUpdateTask={updateTask}
+                            onAttachmentsChange={fetchTasks}
                         />
                     </TabsContent>
                 </Tabs>
