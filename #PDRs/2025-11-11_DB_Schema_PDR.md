@@ -13,6 +13,7 @@ Each PDR records a product decision. It is composed of the following sections an
     - Backend Lead — backend.lead@example.com
     - DBA — dba@example.com (TBD)
     - DevOps — gabriel.davi@example.com
+    - NoSQL Implementation — Leticia Cristina Silva (RA: 21352)
 
  - Links:
     - Issue / Ticket (DB migrations): https://github.com/memento-marcio-org/Planeja-AI/issues/45
