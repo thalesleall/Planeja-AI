@@ -9,10 +9,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "start:dev": "ts-node server.ts",
-  "migrate": "[ -z \"$DATABASE_URL\" ] && echo \"Set DATABASE_URL before running migrations\" || psql $DATABASE_URL -f database/migrations/2025-11-12_add_refresh_tokens.sql",
+    "migrate": "[ -z \"$DATABASE_URL\" ] && echo \"Set DATABASE_URL before running migrations\" || psql $DATABASE_URL -f database/migrations/2025-11-12_add_refresh_tokens.sql",
     "test": "vitest",
     "clean": "rimraf dist",
-  "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts"
   },
   "keywords": [
     "nodejs",
@@ -22,38 +22,42 @@
     "planeja-ai"
   ],
   "dependencies": {
+    "@langchain/openai": "^0.3.0",
+    "@socket.io/redis-adapter": "^7.1.0",
     "@supabase/supabase-js": "^2.58.0",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
     "express-rate-limit": "^8.1.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
-  "socket.io": "^4.7.2",
-  "@socket.io/redis-adapter": "^7.1.0",
-  "ioredis": "^5.3.2",
-  "langchain": "^0.0.207",
-  "@langchain/openai": "^0.3.0",
-  "openai": "^4.8.0",
-    "cookie-parser": "^1.4.6",
-    "jsonwebtoken": "^9.0.2"
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.0.207",
+    "mongodb": "^5.9.2",
+    "multer": "^2.0.2",
+    "openai": "^4.8.0",
+    "sharp": "^0.34.5",
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
-    "vitest": "^1.0.0",
-    "supertest": "^6.3.3",
-    "@types/supertest": "^2.0.12",
     "@types/bcryptjs": "^2.4.6",
-  "@types/cookie-parser": "^1.4.3",
     "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.0.0",
+    "@types/supertest": "^2.0.12",
     "nodemon": "^3.1.10",
+    "supertest": "^6.3.3",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
   }
 }

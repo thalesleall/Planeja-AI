@@ -16,37 +16,39 @@ export function initSocket(opts: InitOptions = {}) {
   if (socket) return socket;
 
   const { token, backendUrl, transports = ["websocket", "polling"], autoConnect = false, reconnection = true } = opts;
-  const url = backendUrl ?? (typeof window !== "undefined" ? (process.env.NEXT_PUBLIC_API_URL || window.location.origin) : undefined);
+  const url = (backendUrl ?? (typeof window !== "undefined" ? (process.env.NEXT_PUBLIC_API_URL || window.location.origin) : undefined)) as string | undefined;
 
   // Use dynamic auth callback so token can be refreshed on connect_error
-  socket = io(url as any, {
+  socket = io(url as string, {
     autoConnect,
     transports,
     reconnection,
-    auth: (cb: (auth: Record<string, any>) => void) => {
+    auth: (cb: (auth: Record<string, unknown>) => void) => {
       const t = token ?? (typeof window !== "undefined" ? localStorage.getItem("token") : undefined);
       cb({ token: t });
     },
   });
 
-  socket.on("connect_error", (err: any) => {
+  socket.on("connect_error", (err: unknown) => {
     // Example handling per docs: if auth failed, try to refresh token and reconnect
     try {
-      if (err && err.message && /auth|credentials|invalid/i.test(err.message)) {
+  const maybeErr = err as { message?: unknown };
+  if (maybeErr && typeof maybeErr.message === 'string' && /auth|credentials|invalid/i.test(maybeErr.message)) {
         // Attempt to refresh token (implement your refresh flow here)
-        const refresh = (window as any).getNewToken?.();
-        if (refresh && typeof refresh.then === "function") {
-          refresh
-            .then((newToken: string) => {
-              socket && (socket.auth = { token: newToken });
-              socket && socket.connect();
-            })
-            .catch(() => {
+        const getter = window.getNewToken;
+        if (typeof getter === 'function') {
+          const refresh = getter();
+          if (refresh && typeof (refresh as Promise<unknown>).then === 'function') {
+            (refresh as Promise<string>).then((newToken: string) => {
+              if (socket) (socket as unknown as { auth?: unknown }).auth = { token: newToken };
+              if (socket) socket.connect();
+            }).catch(() => {
               // leave it disconnected; app should prompt for re-login
             });
+          }
         }
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
   });
@@ -60,8 +62,13 @@ export function initSocket(opts: InitOptions = {}) {
 
   // expose to window for other helpers (logout, debug)
   try {
-    if (typeof window !== 'undefined') (window as any).getSocket = getSocket;
-  } catch (e) {}
+    if (typeof window !== 'undefined') {
+      // expose typed getter
+      window.getSocket = getSocket;
+    }
+  } catch {
+    // ignore
+  }
 
   return socket;
 }

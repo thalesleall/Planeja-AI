@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react';
-import { getToken } from '@/lib/auth';
+import api from '@/lib/api';
 
 type TokenRow = {
   id: string;
@@ -18,13 +18,12 @@ export default function TokenList() {
   const fetchTokens = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const res = await fetch('/api/v1/auth/refresh-tokens', { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setTokens(data?.data || []);
-      } else {
-        console.warn('Failed to fetch tokens', res.status);
+      try {
+        const res = await api.auth.listTokens();
+        if (res.ok) setTokens(res.data?.data || []);
+        else console.warn('Failed to fetch tokens', res.status);
+      } catch (err) {
+        console.error(err);
       }
     } catch (e) {
       console.error(e);
@@ -34,8 +33,7 @@ export default function TokenList() {
 
   const revoke = async (id: string) => {
     try {
-      const token = await getToken();
-      const res = await fetch(`/api/v1/auth/refresh-tokens/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.auth.revokeToken(id);
       if (res.ok) fetchTokens();
     } catch (e) {
       console.error(e);

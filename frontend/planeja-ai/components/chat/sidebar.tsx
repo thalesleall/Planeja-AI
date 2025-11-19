@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react";
+import api from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -24,22 +25,30 @@ export default function ChatSidebar({
 
   React.useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    fetch(`/api/v1/chats`)
-      .then((r) => r.json())
-      .then((data) => {
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await api.chats.list();
         if (!mounted) return;
         // Expecting { data: [] } or array
-        const list: any = data?.data ?? data ?? [];
-        const normalized = (Array.isArray(list) ? list : []).map((c: any) => ({
-          id: String(c.id ?? c.chat_id ?? c.uuid),
-          title: c.title ?? c.name ?? `Chat ${c.id}`,
-          lastMessage: c.last_message ?? c.lastMessage ?? undefined,
-        }));
+        const list: unknown = data?.data ?? data ?? [];
+        const normalized = (Array.isArray(list) ? list : []).map((c) => {
+          const item = c as Record<string, unknown>;
+          const id = String(item['id'] ?? item['chat_id'] ?? item['uuid'] ?? '');
+          const titleRaw = item['title'] ?? item['name'] ?? undefined;
+          const lastMessageRaw = item['last_message'] ?? item['lastMessage'] ?? undefined;
+          const title = typeof titleRaw === 'string' ? titleRaw : `Chat ${id}`;
+          const lastMessage = typeof lastMessageRaw === 'string' ? lastMessageRaw : undefined;
+          return { id, title, lastMessage } as ChatItem;
+        });
         setChats(normalized);
-      })
-      .catch((err) => console.error("Failed to load chats", err))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        // keep console error for visibility
+        console.error("Failed to load chats", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
 
     return () => {
       mounted = false;
@@ -73,7 +82,7 @@ export default function ChatSidebar({
 
             {!loading && chats.length === 0 && (
               <div className="p-6 text-sm text-muted-foreground">
-                No chats yet. Create one using the "New" button.
+                No chats yet. Create one using the &quot;New&quot; button.
               </div>
             )}
 

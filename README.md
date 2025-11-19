@@ -32,6 +32,9 @@ O **Planeja-AI** é uma aplicação Full-Stack de gerenciamento de tarefas (To-D
 - **PostgreSQL** (via **Supabase**): Banco de dados relacional com suporte a consultas complexas
 - Estrutura com tabelas: `users`, `to_do_plan`, `to_do_list`, `to_do_item`, `steps`
 - Relacionamentos entre usuários, planos, listas e tarefas
+- **MongoDB Atlas**: Banco de dados NoSQL para armazenamento de anexos e arquivos
+- Coleção `attachments` com suporte a uploads de imagens, documentos e thumbnails
+- Processamento de imagens com Sharp para geração automática de miniaturas
 
 ### **Criptografia**
 
@@ -79,6 +82,7 @@ O **Planeja-AI** é uma aplicação Full-Stack de gerenciamento de tarefas (To-D
 | **Gabriel Davi**   | DevOps           |
 | **Diego**          | Documentação     |
 | **Maria Fernanda** | UI/UX            |
+| **Leticia Silva**  | NoSQL (MongoDB)  |
 
 ---
 
@@ -134,6 +138,7 @@ Planeja-AI/
      SUPABASE_KEY=sua_chave_supabase
      JWT_SECRET=seu_segredo_jwt
      PORT=3001
+     MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/
      ```
 
 3. **Execute o banco de dados:**
@@ -173,6 +178,15 @@ Planeja-AI/
 - `POST /api/tasks` - Criar nova tarefa
 - `PUT /api/tasks/:id` - Atualizar tarefa
 - `DELETE /api/tasks/:id` - Deletar tarefa
+
+#### **Anexos (MongoDB Atlas)**
+
+- `POST /api/attachments/upload` - Upload de arquivos para tarefas
+- `GET /api/attachments/task/:taskId` - Listar anexos de uma tarefa
+- `DELETE /api/attachments/:id` - Remover anexo
+- `PUT /api/attachments/:id/cover` - Definir imagem como capa da tarefa
+- `GET /api/attachments/:id/file` - Download de arquivo anexado
+- `GET /api/attachments/:id/thumbnail` - Download de thumbnail (imagens)
 
 ---
 

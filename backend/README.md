@@ -80,13 +80,23 @@ const { lists } = await response.json();
 
 ## 🚀 Stack Tecnológica do Backend
 
+### Databases (Híbrido SQL + NoSQL)
+- **PostgreSQL (Supabase)** - Dados estruturados (usuários, listas, tarefas)
+- **MongoDB** - Arquivos e metadados de anexos
+- **Filesystem** - Armazenamento físico de uploads
+
+### Backend Core
 - **Node.js v18+** - Runtime JavaScript
 - **TypeScript** - Tipagem estática e desenvolvimento seguro
 - **Express.js** - Framework web minimalista e flexível
-- **Supabase** - PostgreSQL como serviço + autenticação
 - **JWT** - Tokens seguros para autenticação
 - **bcryptjs** - Hash seguro de senhas
 - **express-validator** - Validação robusta de dados
+
+### File Handling & Storage
+- **Multer** - Upload de arquivos multipart/form-data
+- **Sharp** - Processamento e otimização de imagens
+- **MongoDB Driver** - Cliente oficial para operações NoSQL
 
 ## 📁 Arquitetura do Backend
 
@@ -141,33 +151,101 @@ PUT  /api/v1/tasks/:id/complete  # Marcar como concluída
 DELETE /api/v1/tasks/:id         # Deletar tarefa
 ```
 
+### 📎 Endpoints de Anexos (MongoDB)
+
+```bash
+# Upload de arquivos (até 10 por vez)
+POST /api/v1/tasks/:taskId/attachments
+
+# Listar anexos de uma task
+GET /api/v1/tasks/:taskId/attachments
+
+# Deletar anexo específico
+DELETE /api/v1/tasks/:taskId/attachments/:attachmentId
+
+# Definir como capa da task
+PUT /api/v1/tasks/:taskId/attachments/:attachmentId/set-cover
+
+# Servir arquivo original
+GET /api/v1/attachments/:taskId/:filename
+
+# Servir thumbnail
+GET /api/v1/attachments/:taskId/thumb/:filename
+```
+
+**📖 Documentação Completa de Anexos**: [MONGODB_ATTACHMENTS.md](./MONGODB_ATTACHMENTS.md)
+
 ## 🎨 Diferencial da Implementação Backend
 
 Esta implementação se destaca por:
 
-1. **Arquitetura em Camadas**: Separação clara entre rotas, controllers e middleware
-2. **Type Safety**: TypeScript em 100% do código para maior segurança
-3. **Validação Rigorosa**: Validação de entrada em todos os endpoints
-4. **Segurança Robusta**: JWT + bcrypt + middleware de proteção
-5. **Código Limpo**: Estrutura organizadas e fácil manutenção
-6. **Performance**: Queries otimizadas e estrutura eficiente
+1. **Arquitetura Híbrida SQL + NoSQL**: PostgreSQL para dados estruturados + MongoDB para arquivos
+2. **Arquitetura em Camadas**: Separação clara entre rotas, controllers, models e middleware
+3. **Type Safety**: TypeScript em 100% do código para maior segurança
+4. **Validação Rigorosa**: Validação de entrada em todos os endpoints
+5. **Segurança Robusta**: JWT + bcrypt + middleware de proteção + validação de mimetype
+6. **Código Limpo**: Estrutura organizadas e fácil manutenção
+7. **Performance**: Queries otimizadas, thumbnails automáticos, índices MongoDB
+8. **Graceful Degradation**: Sistema funciona mesmo sem MongoDB (anexos opcionais)
 
 ## 🔧 Como Executar o Backend
 
+### 1. Instalar Dependências
+
 ```bash
-# Instalar dependências
 npm install
+```
 
-# Configurar variáveis de ambiente
+### 2. Configurar MongoDB (para anexos)
+
+**✅ MongoDB Atlas Cloud (JÁ CONFIGURADO)**
+
+O projeto já está configurado com MongoDB Atlas cloud! Nenhuma instalação local necessária.
+
+**Alternativas locais:**
+
+```bash
+# Docker
+docker run -d --name planeja-mongodb -p 27017:27017 mongo:latest
+
+# Ubuntu/Debian
+sudo apt install mongodb
+```
+
+### 3. Configurar Variáveis de Ambiente
+
+```bash
 cp .env.example .env
-# Editar .env com suas credenciais Supabase
+# Editar .env com suas credenciais
+```
 
-# Executar em desenvolvimento
+Adicione no `.env`:
+```env
+# PostgreSQL
+SUPABASE_URL=sua_url_supabase
+SUPABASE_ANON_KEY=sua_key
+
+# MongoDB Atlas (já configurado)
+MONGODB_URI=mongodb+srv://leticiacristina21352_db_user:UgOCTDcMLJib8018@cluster0.bnvlisb.mongodb.net/?appName=Cluster0
+MONGODB_DB_NAME=planeja_ai
+```
+
+### 4. Executar
+
+```bash
+# Desenvolvimento (com hot reload)
 npm run dev
 
-# Build para produção
+# Produção
 npm run build
 npm start
+```
+
+### 5. Testar API de Anexos
+
+```bash
+# Script de teste automatizado
+./test-attachments.sh
 ```
 
 ## � Monitoramento e Health Check

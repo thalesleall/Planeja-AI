@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AnalyticsCards } from '@/components/analytics-cards';
 import { supabase } from '@/lib/supabase';
+import api from '@/lib/api';
 import { TaskList } from '@/components/task-list';
 import { AddTaskForm } from '@/components/add-task-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,42 +15,46 @@ export default function Home() {
     const [tasks, setTasks] = useState<ToDoItem[]>([]);
     const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
-    useEffect(() => {
-        const fetchTasks = async () => {
-            const { data, error } = await supabase
-                .from('to_do_item')
-                .select('*')
-                .order('item_order', { ascending: true });
-
-            if (error) {
-                console.error('Erro ao buscar tarefas:', error);
-            } else {
-                setTasks(data);
+    const fetchTasks = async () => {
+        try {
+            const res = await api.tasks.get();
+            if (!res.ok) {
+                console.error('Erro ao buscar tarefas:', res.status, res.data);
+                return;
             }
-        };
+            const items = res.data?.items ?? res.data?.data ?? [];
+            
+            // Fetch attachment counts for each task
+            const tasksWithCounts = await Promise.all(
+                items.map(async (task: ToDoItem) => {
+                    try {
+                        const attachRes = await api.attachments.list(String(task.id));
+                        const count = attachRes.ok ? (attachRes.data?.attachments?.length || 0) : 0;
+                        return { ...task, attachmentCount: count };
+                    } catch {
+                        return { ...task, attachmentCount: 0 };
+                    }
+                })
+            );
+            
+            setTasks(tasksWithCounts);
+        } catch (err) {
+            console.error('Erro ao buscar tarefas:', err);
+        }
+    };
 
+    useEffect(() => {
         fetchTasks();
     }, []);
 
     // Adicionar tarefa com título e descrição
     const addTask = async (title: string, description: string | null = null) => {
         try {
-            const { data, error } = await supabase
-                .from('to_do_item')
-                .insert([
-                    {
-                        name: title,
-                        list_id: 1,
-                        item_order: tasks.length + 1,
-                        description,
-                        done: false,
-                    },
-                ])
-                .select()
-                .single();
-
-            if (error) throw error;
-            if (data) setTasks([data, ...tasks]);
+            // create item in default list (1) — adapt if user lists are implemented
+            const res = await api.lists.createItem(1, { name: title, description });
+            if (!res.ok) throw new Error(`Create failed: ${res.status}`);
+            const item = res.data?.item ?? res.data?.data ?? null;
+            if (item) setTasks((prev) => [item, ...prev]);
         } catch (error) {
             console.error('Erro ao adicionar tarefa:', error);
         }
@@ -58,15 +63,15 @@ export default function Home() {
     // Sugestão da AI
     const handleAISuggest = async () => {
         try {
-            const response = await fetch('/api/suggest-task', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (!response.ok) throw new Error('Falha ao obter sugestão');
-
-            const { suggestion } = await response.json();
-            await addTask(suggestion);
+            const res = await api.ai.suggest();
+            if (!res.ok) throw new Error('Falha ao obter sugestão');
+            const obj = res.data as Record<string, unknown> | null;
+            const suggestion = obj && (typeof obj['suggestion'] === 'string'
+                ? (obj['suggestion'] as string)
+                : typeof obj['text'] === 'string'
+                ? (obj['text'] as string)
+                : null);
+            if (suggestion) await addTask(suggestion);
         } catch (error) {
             console.error('Erro ao obter sugestão AI:', error);
         }
@@ -75,14 +80,15 @@ export default function Home() {
     // Marcar tarefa como completa
     const toggleComplete = async (id: number, completed: boolean) => {
         try {
-            const { error } = await supabase
-                .from('to_do_item')
-                .update({ done: completed })
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setTasks(tasks.map((task) => (task.id === id ? { ...task, done: completed } : task)));
+            const res = await api.tasks.complete(id);
+            if (!res.ok) throw new Error(`complete failed ${res.status}`);
+            const d = res.data as Record<string, unknown> | null;
+            const updated = d?.['item'] ?? d?.['data'] ?? null;
+            if (updated) {
+                setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+            } else {
+                setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: completed } : t)));
+            }
         } catch (error) {
             console.error('Erro ao atualizar tarefa:', error);
         }
@@ -139,6 +145,7 @@ export default function Home() {
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
                             onUpdateTask={updateTask}
+                            onAttachmentsChange={fetchTasks}
                         />
                     </TabsContent>
 
@@ -147,6 +154,7 @@ export default function Home() {
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
                             onUpdateTask={updateTask}
+                            onAttachmentsChange={fetchTasks}
                         />
                     </TabsContent>
 
@@ -155,6 +163,7 @@ export default function Home() {
                             tasks={filteredTasks}
                             onToggleComplete={toggleComplete}
                             onUpdateTask={updateTask}
+                            onAttachmentsChange={fetchTasks}
                         />
                     </TabsContent>
                 </Tabs>

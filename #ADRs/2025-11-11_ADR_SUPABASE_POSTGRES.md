@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2025-11-11
-- Owners: Platform Team: Backend Owners <backend-team@example.com>
+- Owners: Platform Team: Backend Owners <backend-team@example.com>, Leticia Cristina Silva (NoSQL - RA: 21352)
 - Links: Issue: TBD, PDR: `#PDRs/2025-10-30_MVP_Chat_PDR.md`, Grafana: (link)
 
 ## Context

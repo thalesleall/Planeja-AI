@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import config from "../config";
+import attachmentRoutes from "./attachments";
 
 const router = Router();
 
@@ -20,6 +21,9 @@ router.get("/health", (req: Request, res: Response) => {
   
   res.status(200).json(healthCheck);
 });
+
+// Rotas de anexos
+router.use("/", attachmentRoutes);
 
 // Rota principal
 router.get("/", (req: Request, res: Response) => {

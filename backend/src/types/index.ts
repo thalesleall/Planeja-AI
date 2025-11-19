@@ -6,6 +6,18 @@ export interface User {
   name: string;
 }
 
+// Estender Request do Express com user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+      };
+    }
+  }
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
