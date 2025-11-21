@@ -32,8 +32,8 @@ graph LR
 
    I[[Google Gemini API]]
 
-   A -->|HTTPS| B -->|Static + /api|
-   B --> C
+   A -->|HTTPS| B
+   B -->|Static + /api| C
    C --> D
    C --> E --> I
    C --> F
