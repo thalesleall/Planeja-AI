@@ -103,17 +103,17 @@ Visão geral das principais telas e fluxos em execução:
 
 ## 👥 Equipe de Desenvolvimento
 
-| Nome               | Responsabilidade |
-| ------------------ | ---------------- |
-| **Thales**         | Backend          | 24740
-| **Gabriel Storti** | Frontend         | 
-| **Luis Felipe**    | Frontend         | 24661
-| **João Pedro**     | Banco de dados   | 24823
-| **José Eduardo**   | Documentação     | 
-| **Gabriel Davi**   | DevOps           | 
-| **Diego**          | Documentação     | 24753
-| **Maria Fernanda** | UI/UX            | 24767
-| **Leticia Silva**  | NoSQL (MongoDB)  | 21352
+| Nome | Responsabilidade + Código |
+| ---- | ------------------------- |
+| **Thales Vinicius Leal Barcelos** | Backend · 24740 |
+| **Gabriel Storti Segalla** | Frontend · 24708 |
+| **Luis Felipe Mozer Chiqueto** | Frontend · 24661 |
+| **João Pedro Rosa de Paula** | Banco de dados · 24823 |
+| **José Eduardo Dias Rufino** | Documentação · 24743 |
+| **Gabriel Davi Lopes Jacobini** | DevOps · 24734 |
+| **Diego de Oliveira Murari Guimarães** | Documentação · 24753 |
+| **Maria Fernanda Leite Felicissimo** | UI/UX · 24767 |
+| **Leticia Cristina Silva** | NoSQL (MongoDB) · 21352 |
 
 ---
 
