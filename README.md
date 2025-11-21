@@ -105,15 +105,15 @@ Visão geral das principais telas e fluxos em execução:
 
 | Nome | Responsabilidade + Código |
 | ---- | ------------------------- |
-| **Thales Vinicius Leal Barcelos** | Backend · 24740 |
-| **Gabriel Storti Segalla** | Frontend · 24708 |
-| **Luis Felipe Mozer Chiqueto** | Frontend · 24661 |
-| **João Pedro Rosa de Paula** | Banco de dados · 24823 |
-| **José Eduardo Dias Rufino** | Documentação · 24743 |
-| **Gabriel Davi Lopes Jacobini** | DevOps · 24734 |
-| **Diego de Oliveira Murari Guimarães** | Documentação · 24753 |
-| **Maria Fernanda Leite Felicissimo** | UI/UX · 24767 |
-| **Leticia Cristina Silva** | NoSQL (MongoDB) · 21352 |
+| **Thales Vinicius Leal Barcelos · 24740** | Backend |
+| **Gabriel Storti Segalla · 24708** | Frontend  |
+| **Luis Felipe Mozer Chiqueto · 24661** | Frontend  |
+| **João Pedro Rosa de Paula · 24823** | Banco de dados  |
+| **José Eduardo Dias Rufino · 24743** | Documentação  |
+| **Gabriel Davi Lopes Jacobini · 24734** | DevOps  |
+| **Diego de Oliveira Murari Guimarães · 24753** | Documentação  |
+| **Maria Fernanda Leite Felicissimo · 24767** | UI/UX  |
+| **Leticia Cristina Silva · 21352** | NoSQL (MongoDB)  |
 
 ---
 
