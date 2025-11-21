@@ -8,34 +8,45 @@ Sistema full-stack de planejamento inteligente que combina listas de tarefas, an
 
 ```mermaid
 graph LR
-   subgraph Client
-      A[Next.js 15 SPA]
+   subgraph Docker Compose Stack
+      subgraph Frontend Container
+         A[Next.js 15 SPA]
+      end
+
+      subgraph Edge/Proxy
+         B[Nginx HTTPS]
+      end
+
+      subgraph Backend Container
+         C[Express API]
+         D[Socket.IO]
+         E[Gemini Adapters]
+      end
    end
 
-   subgraph Edge
-      B[Nginx HTTPS]
-   end
-
-   subgraph Core
-      C[Express API]
-      D[Socket.IO]
-      E[LangChain Service]
-   end
-
-   subgraph Data
+   subgraph Data Services
       F[(Supabase PostgreSQL)]
       G[(MongoDB Atlas)]
       H[(Uploads Volume)]
    end
 
-   A -->|HTTPS| B -->|/| A
-   B -->|/api| C
+   I[[Google Gemini API]]
+
+   A -->|HTTPS| B -->|Static + /api|
+   B --> C
    C --> D
-   C --> E --> C
+   C --> E --> I
    C --> F
    C --> G
    C --> H
 ```
+
+**Fluxo simplificado**
+
+- **Docker Compose** sobe três serviços principais: `frontend` (Next.js), `backend` (Express) e `nginx`, além dos bancos gerenciados (Supabase/Postgres e Mongo). O proxy Nginx faz o roteamento HTTPS externo para cada container.
+- **Frontend Next.js** serve a SPA e envia todas as chamadas autenticadas para `https://nginx/api/v1`, que são encaminhadas ao backend Express. Socket.IO reutiliza o mesmo host para streaming em tempo real.
+- **Backend Express** centraliza as regras de negócio, acessa Supabase/Mongo e expõe rotas REST + WebSocket. Os scripts em `backend/scripts/*.cjs` permitem rodar migrações, smoke tests e cópia de assets dentro do mesmo cluster docker.
+- **Integração IA**: rotas de chat/sugestão usam adapters `geminiAdapter`/`taskTitleAdapter`, que trocam o LangChain/Azure antigo por chamadas diretas ao Google Gemini (via JSON de treinamento em `src/lib`).
 
 ---
 
@@ -99,7 +110,7 @@ Visão geral das principais telas e fluxos em execução:
 | **Luis Felipe**    | Frontend         | 24661
 | **João Pedro**     | Banco de dados   | 24823
 | **José Eduardo**   | Documentação     | 
-| **Gabriel Davi**   | DevOps           |
+| **Gabriel Davi**   | DevOps           | 
 | **Diego**          | Documentação     | 24753
 | **Maria Fernanda** | UI/UX            | 24767
 | **Leticia Silva**  | NoSQL (MongoDB)  | 21352
