@@ -4,8 +4,11 @@
     "module": "CommonJS",
     "outDir": "dist",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
-  "include": ["server.ts"],
-  "exclude": ["node_modules"]
+  "include": ["server.ts", "src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
 }

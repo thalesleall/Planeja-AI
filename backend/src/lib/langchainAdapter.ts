@@ -8,8 +8,8 @@
 
 // We dynamically import langchain and provider packages at runtime inside processMessage.
 // This allows running in local dev without requiring LangChain to be present or ESM exports to match.
-import { z } from 'zod';
-import dotenv from 'dotenv';
+import { z } from "zod";
+import dotenv from "dotenv";
 dotenv.config();
 
 type Message = { role: string; content: string };
@@ -29,10 +29,16 @@ type ProcessParams = {
  * NOTE: For Azure OpenAI, set the appropriate environment variables (OPENAI_API_KEY and
  * OPENAI_API_BASE) and LangChain will use the underlying OpenAI client with the Azure endpoint.
  */
-const processMessage = async ({ userId, chatId, message, history, onToken }: ProcessParams) => {
+const processMessage = async ({
+  userId,
+  chatId,
+  message,
+  history,
+  onToken,
+}: ProcessParams) => {
   // Basic input safety checks before calling the LLM
-  if (!message || typeof message !== 'string' || message.trim().length === 0) {
-    return { text: '', actions: [] };
+  if (!message || typeof message !== "string" || message.trim().length === 0) {
+    return { text: "", actions: [] };
   }
 
   if (message.length > 10000) {
@@ -43,8 +49,9 @@ const processMessage = async ({ userId, chatId, message, history, onToken }: Pro
   let LangChain: any = null;
   let ChatOpenAI: any = null;
   try {
-    LangChain = await import('langchain');
-    ChatOpenAI = (await import('@langchain/openai')).ChatOpenAI;
+    LangChain = await import(/* @vite-ignore */ "langchain");
+    ChatOpenAI = (await import(/* @vite-ignore */ "@langchain/openai"))
+      .ChatOpenAI;
   } catch (e) {
     // LangChain not available or incompatible — will use fallback below
     LangChain = null;
@@ -55,8 +62,8 @@ const processMessage = async ({ userId, chatId, message, history, onToken }: Pro
   if (!LangChain || !ChatOpenAI) {
     // Call onToken with the message split into tokens (simple whitespace split) to simulate streaming
     if (onToken) {
-      const tokens = (`Assistant reply to: ${message}`).split(/\s+/);
-      for (const t of tokens) onToken(t + ' ');
+      const tokens = `Assistant reply to: ${message}`.split(/\s+/);
+      for (const t of tokens) onToken(t + " ");
     }
     return { text: `Assistant reply to: ${message}`, actions: [] };
   }
@@ -68,38 +75,64 @@ const processMessage = async ({ userId, chatId, message, history, onToken }: Pro
       return JSON.stringify(args);
     },
     {
-      name: 'create_project',
-      description: 'Create a Project structure with lists and tasks. Returns a JSON object representing the project.',
+      name: "create_project",
+      description:
+        "Create a Project structure with lists and tasks. Returns a JSON object representing the project.",
       schema: z.object({
         title: z.string().optional(),
         description: z.string().optional(),
-        lists: z.array(z.object({ title: z.string().optional(), tasks: z.array(z.object({ title: z.string().optional(), description: z.string().optional() })).optional() })).optional()
-      })
+        lists: z
+          .array(
+            z.object({
+              title: z.string().optional(),
+              tasks: z
+                .array(
+                  z.object({
+                    title: z.string().optional(),
+                    description: z.string().optional(),
+                  })
+                )
+                .optional(),
+            })
+          )
+          .optional(),
+      }),
     }
   );
 
   // Instantiate model. LangChain will use OPENAI_API_KEY / OPENAI_API_BASE for Azure if configured.
-  const model = new ChatOpenAI({ model: process.env.AZURE_OPENAI_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.2 });
+  const model = new ChatOpenAI({
+    model:
+      process.env.AZURE_OPENAI_MODEL ||
+      process.env.OPENAI_MODEL ||
+      "gpt-4o-mini",
+    temperature: 0.2,
+  });
 
   // Simple prompt template wrapper: gives the assistant explicit instruction about allowed tool calls
   const systemInstruction = `You are an assistant that may propose actions like create_project. Only propose create_project when the user explicitly requests creating a project. When proposing create_project, output a tool call named create_project with arguments matching the schema.`;
 
-  const agent = (LangChain as any).createAgent({ model, tools: [createProjectTool], systemMessage: systemInstruction as any });
+  const agent = (LangChain as any).createAgent({
+    model,
+    tools: [createProjectTool],
+    systemMessage: systemInstruction as any,
+  });
 
   // Prepare messages for the agent: include history as human/assistant messages
   const messages = [] as any[];
   if (history && history.length) {
     for (const h of history) {
-  if (h.role === 'user') messages.push(new (LangChain as any).HumanMessage(h.content));
-  else messages.push(new (LangChain as any).HumanMessage(h.content));
+      if (h.role === "user")
+        messages.push(new (LangChain as any).HumanMessage(h.content));
+      else messages.push(new (LangChain as any).HumanMessage(h.content));
     }
   }
   messages.push(new (LangChain as any).HumanMessage(message));
 
   // Stream from the agent
-  const stream = await agent.stream({ messages }, { streamMode: 'values' });
+  const stream = await agent.stream({ messages }, { streamMode: "values" });
 
-  let finalText = '';
+  let finalText = "";
   let finalToolCalls: any[] = [];
 
   for await (const chunk of stream) {
@@ -114,7 +147,10 @@ const processMessage = async ({ userId, chatId, message, history, onToken }: Pro
         }
 
         // Collect any tool calls if present
-        if (Array.isArray(lastMessage.tool_calls) && lastMessage.tool_calls.length > 0) {
+        if (
+          Array.isArray(lastMessage.tool_calls) &&
+          lastMessage.tool_calls.length > 0
+        ) {
           for (const tc of lastMessage.tool_calls) {
             finalToolCalls.push(tc);
           }
@@ -122,7 +158,7 @@ const processMessage = async ({ userId, chatId, message, history, onToken }: Pro
       }
     } catch (e) {
       // ignore streaming parse errors
-      console.debug('langchain stream chunk parse error', e);
+      console.debug("langchain stream chunk parse error", e);
     }
   }
 
@@ -133,7 +169,7 @@ const processMessage = async ({ userId, chatId, message, history, onToken }: Pro
     let args = tc.args;
     // args might be a JSON string
     try {
-      if (typeof args === 'string') args = JSON.parse(args);
+      if (typeof args === "string") args = JSON.parse(args);
     } catch (e) {
       // leave as-is
     }

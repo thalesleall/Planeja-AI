@@ -1,6 +1,13 @@
-"use client"
+"use client";
 
-import api from './api';
+import api from "./api";
+
+const USER_STORAGE_KEY = "planeja-ai:user";
+
+type RefreshResponsePayload = {
+  token?: string;
+  accessToken?: string;
+};
 
 export async function getToken() {
   if (typeof window === "undefined") return null;
@@ -11,15 +18,33 @@ export async function setToken(token: string | null) {
   api.saveToken(token);
 }
 
+export function getStoredUser<T = Record<string, unknown>>() {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(USER_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: unknown) {
+  if (typeof window === "undefined") return;
+  if (user) localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  else localStorage.removeItem(USER_STORAGE_KEY);
+}
+
 export async function refreshToken(): Promise<string | null> {
   try {
     const res = await api.auth.refresh();
     if (!res.ok) {
-      console.warn('refreshToken failed', res.status);
+      console.warn("refreshToken failed", res.status);
       return null;
     }
 
-    const newToken = res.data?.token ?? res.data?.accessToken ?? null;
+    const payload = res.data as RefreshResponsePayload | undefined;
+    const newToken = payload?.token ?? payload?.accessToken ?? null;
     if (newToken) {
       await setToken(newToken);
       return newToken;
@@ -27,7 +52,7 @@ export async function refreshToken(): Promise<string | null> {
 
     return null;
   } catch (err) {
-    console.error('refreshToken error', err);
+    console.error("refreshToken error", err);
     return null;
   }
 }
@@ -43,15 +68,19 @@ if (typeof window !== "undefined") {
     try {
       await api.auth.logout();
     } catch (err) {
-      console.error('logout failed', err);
+      console.error("logout failed", err);
     }
     await setToken(null);
+    setStoredUser(null);
     // disconnect socket if present
     try {
       const getter = window.getSocket;
-      if (typeof getter === 'function') {
+      if (typeof getter === "function") {
         const s = getter();
-        if (s && typeof (s as { disconnect?: () => void }).disconnect === 'function') {
+        if (
+          s &&
+          typeof (s as { disconnect?: () => void }).disconnect === "function"
+        ) {
           (s as { disconnect: () => void }).disconnect();
         }
       }

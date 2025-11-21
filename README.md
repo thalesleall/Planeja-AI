@@ -1,73 +1,92 @@
 # Planeja-AI
 
-## 📋 Objetivo do Projeto
-
-O **Planeja-AI** é uma aplicação Full-Stack de gerenciamento de tarefas (To-Do List) moderna e inteligente, desenvolvida para auxiliar usuários no planejamento e organização de suas atividades diárias. O sistema permite criar, organizar e acompanhar tarefas de forma eficiente, com recursos de análise e visualização de produtividade.
+Sistema full-stack de planejamento inteligente que combina listas de tarefas, anexos ricos e sugestões via IA para apoiar o usuário do planejamento ao acompanhamento das atividades.
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## 🏗️ Arquitetura (alto nível)
 
-### **Back-end**
+```mermaid
+graph LR
+   subgraph Client
+      A[Next.js 15 SPA]
+   end
 
-- **Node.js** com **TypeScript**: Runtime e linguagem para desenvolvimento do servidor
-- **Express.js**: Framework web para criação de APIs RESTful
-- **Supabase (PostgreSQL)**: Banco de dados relacional para persistência de dados
-- **JWT (JSON Web Tokens)**: Sistema de autenticação e autorização
-- **Express Validator**: Validação de dados de entrada
+   subgraph Edge
+      B[Nginx HTTPS]
+   end
 
-### **Front-end**
+   subgraph Core
+      C[Express API]
+      D[Socket.IO]
+      E[LangChain Service]
+   end
 
-- **Next.js 15**: Framework React com renderização no servidor (SSR) e otimizações
-- **React 19**: Biblioteca para construção de interfaces de usuário
-- **TypeScript**: Linguagem tipada para maior segurança no desenvolvimento
-- **Tailwind CSS**: Framework CSS utilitário para estilização
-- **Radix UI**: Biblioteca de componentes acessíveis e customizáveis
-- **Shadcn/ui**: Componentes de interface baseados em Radix UI
-- **Lucide React**: Biblioteca de ícones
-- **Date-fns**: Manipulação de datas e horários
+   subgraph Data
+      F[(Supabase PostgreSQL)]
+      G[(MongoDB Atlas)]
+      H[(Uploads Volume)]
+   end
 
-### **Banco de Dados**
+   A -->|HTTPS| B -->|/| A
+   B -->|/api| C
+   C --> D
+   C --> E --> C
+   C --> F
+   C --> G
+   C --> H
+```
 
-- **PostgreSQL** (via **Supabase**): Banco de dados relacional com suporte a consultas complexas
-- Estrutura com tabelas: `users`, `to_do_plan`, `to_do_list`, `to_do_item`, `steps`
-- Relacionamentos entre usuários, planos, listas e tarefas
-- **MongoDB Atlas**: Banco de dados NoSQL para armazenamento de anexos e arquivos
-- Coleção `attachments` com suporte a uploads de imagens, documentos e thumbnails
-- Processamento de imagens com Sharp para geração automática de miniaturas
+---
 
-### **Criptografia**
+## 🎥 Demonstração
 
-- **bcryptjs**: Hashing de senhas com salt para armazenamento seguro
-- **JWT (jsonwebtoken)**: Tokens criptografados para autenticação stateless
-- **Helmet.js**: Proteção contra vulnerabilidades web comuns
+[Vídeo de demonstração funcional do sistema](https://youtu.be/yfAoe_wbHqg)
 
-### **Containerização**
+---
 
-- **Docker**: Containerização de aplicações (frontend e backend)
-- **Docker Compose**: Orquestração de múltiplos containers
-- **Nginx**: Servidor web e reverse proxy para roteamento de requisições
-- **Certificados SSL/TLS**: Comunicação segura via HTTPS
+## 📸 Prints do Sistema
 
-### **Inteligência Artificial**
+Visão geral das principais telas e fluxos em execução:
 
-- **Integração preparada**: Arquitetura pronta para incorporação de modelos de IA
-- **Sugestões inteligentes**: Potencial para análise e recomendação de tarefas
-- **Análise de produtividade**: Recursos de analytics para insights do usuário
+| Dashboard com métricas e sugestões IA | Modal de sugestões IA |
+| --- | --- |
+| ![Dashboard](Prints/print-1png.png) | ![Modal IA](Prints/print-2.png) |
 
-### **Arquitetura da Aplicação**
+| Lista de tarefas com anexos | Chat com IA |
+| --- | --- |
+| ![Lista de tarefas](Prints/print-3.png) | ![Chat IA](Prints/print-4.png) |
 
-- **Arquitetura em Camadas** (Layered Architecture):
-  - **Camada de Apresentação**: Frontend Next.js
-  - **Camada de API**: Backend Express.js com rotas RESTful
-  - **Camada de Lógica de Negócio**: Controllers e Services
-  - **Camada de Dados**: Supabase/PostgreSQL
-- **Padrão MVC** (Model-View-Controller) no backend
-- **Microserviços Containerizados**: Separação clara entre frontend, backend e proxy reverso
-- **API RESTful**: Comunicação via endpoints HTTP padronizados
-- **Autenticação baseada em JWT**: Stateless authentication
-- **Middleware Pipeline**: Validação, autenticação e tratamento de erros
-- **CORS** configurado para comunicação segura entre domínios
+| Autenticação e tokens ativos | Upload/visualização de anexos |
+| --- | --- |
+| ![Auth](Prints/print-5.png) | ![Anexos](Prints/print-6.png) |
+
+---
+
+## ⚙️ Funcionalidades Principais
+
+- **Autenticação segura** com registro, login e renovação de tokens JWT + refresh token em cookie HTTP only.
+- **Gestão de listas e tarefas** com CRUD completo, filtros (todas, pendentes, concluídas) e paginação.
+- **Anotações enriquecidas**: descrição extensa, sugestão automática de tarefas via IA (LangChain + OpenAI) e estado concluído.
+- **Anexos e capa visual**: upload de múltiplas imagens/documentos, geração de thumbnails, definição de capa e pré-visualização inline.
+- **Chat assistivo** com histórico, web-socket streaming e IA para dúvidas rápidas sobre o planejamento.
+- **Alertas e feedbacks** centralizados com toasts Sonner para toda ação crítica (login, anexos, tarefas, chat).
+- **Observabilidade básica**: health check (`/health`), logs estruturados e limpeza automática de refresh tokens expirados.
+
+---
+
+## ✅ Requisitos Técnicos Atendidos
+
+| Requisito | Implementação |
+| --- | --- |
+| **Frontend moderno** | Next.js 15 + React 19 + Tailwind/Radix/Shadcn, responsivo e otimizado para mobile. |
+| **Backend API REST** | Express + TypeScript, controllers organizados, validação (express-validator) e rotas `/api/v1`. |
+| **Banco de dados SQL + NoSQL** | Supabase/PostgreSQL armazena usuários/listas/tarefas; MongoDB Atlas guarda metadados de anexos. |
+| **Criptografia de senha** | `bcryptjs` com salt para hash antes do armazenamento. |
+| **Autenticação e rotas protegidas** | JWT + refresh token em cookie, middleware `authenticateToken` e proteção em toda rota `/api/v1`. |
+| **Containerização com Docker** | Dockerfiles multistage para frontend/back, `docker-compose.yml` com Nginx reverse proxy + SSL. |
+| **Uso de IA** | Serviços em `backend/src/services/chatService.ts` e rotas de chat usam LangChain + OpenAI para geração de respostas e sugestões automáticas. |
+| **Documentação + diagrama** | README com instruções de instalação/uso e diagrama de arquitetura (ver seção abaixo). |
 
 ---
 
@@ -75,14 +94,15 @@ O **Planeja-AI** é uma aplicação Full-Stack de gerenciamento de tarefas (To-D
 
 | Nome               | Responsabilidade |
 | ------------------ | ---------------- |
-| **Thales**         | Backend          |
-| **Gabriel Stordi** | Frontend         |
-| **Luis**           | Frontend         |
-| **José Eduardo**   | Documentação     |
+| **Thales**         | Backend          | 24740
+| **Gabriel Storti** | Frontend         | 
+| **Luis Felipe**    | Frontend         | 24661
+| **João Pedro**     | Banco de dados   | 24823
+| **José Eduardo**   | Documentação     | 
 | **Gabriel Davi**   | DevOps           |
-| **Diego**          | Documentação     |
-| **Maria Fernanda** | UI/UX            |
-| **Leticia Silva**  | NoSQL (MongoDB)  |
+| **Diego**          | Documentação     | 24753
+| **Maria Fernanda** | UI/UX            | 24767
+| **Leticia Silva**  | NoSQL (MongoDB)  | 21352
 
 ---
 
@@ -90,161 +110,110 @@ O **Planeja-AI** é uma aplicação Full-Stack de gerenciamento de tarefas (To-D
 
 ```
 Planeja-AI/
-├── backend/              # API Node.js + Express + TypeScript
-│   ├── src/
-│   │   ├── config/       # Configurações (Supabase, env)
-│   │   ├── controllers/  # Lógica de negócio
-│   │   ├── middleware/   # Autenticação e validação
-│   │   ├── routes/       # Rotas da API
-│   │   └── types/        # Tipos TypeScript
-│   ├── database/         # Scripts SQL
-│   └── Dockerfile        # Container do backend
-├── frontend/planeja-ai/  # Aplicação Next.js
-│   ├── app/              # Pages e layouts (App Router)
-│   ├── components/       # Componentes React
-│   ├── lib/              # Utilitários e configs
-│   └── Dockerfile        # Container do frontend
-├── infra/                # Infraestrutura
-│   ├── nginx/            # Configuração do proxy reverso
-│   └── certificates/     # Certificados SSL
-├── database/             # Modelagem e scripts do BD
-└── docker-compose.yml    # Orquestração de containers
+├── backend/              # Express + TS + Vitest + Dockerfile
+├── frontend/planeja-ai/  # Next.js 15 + App Router + Dockerfile
+├── infra/                # Nginx reverse proxy + certificados TLS
+├── database/             # Schemas e scripts SQL
+├── docker-compose.yml    # Orquestração em produção
+└── docker-compose.local.yml # Stack de desenvolvimento (Postgres, Redis, MinIO opcional)
 ```
 
 ---
 
 ## 🔧 Como Executar o Projeto
 
-### Pré-requisitos
+### 1. Pré-requisitos
 
-- **Docker** e **Docker Compose** instalados
-- **Node.js 20+** (para desenvolvimento local)
-- Conta no **Supabase** com banco de dados PostgreSQL configurado
+- Node.js 20+ e npm 10+
+- Docker + Docker Compose
+- Contas no Supabase (Postgres) e MongoDB Atlas
+- Chave de API da OpenAI (ou provider compatível)
 
-### Passos
+### 2. Variáveis de ambiente mínimas
 
-1. **Clone o repositório:**
+`backend/.env`
+```env
+PORT=3001
+NODE_ENV=development
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+MONGODB_URI=mongodb+srv://...
+JWT_SECRET=troque-me
+SESSION_SECRET=troque-me
+OPENAI_API_KEY=sk-...
+FRONTEND_URL=http://localhost:3000
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
 
+`frontend/planeja-ai/.env`
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+### 3. Execução para desenvolvimento
+
+```bash
+git clone https://github.com/memento-marcio-org/Planeja-AI.git
+cd Planeja-AI
+
+# backend
+cd backend
+npm install
+npm run dev
+
+# frontend (novo terminal)
+cd ../frontend/planeja-ai
+npm install
+npm run dev
+```
+
+Backend exposto em `http://localhost:3001` e frontend em `http://localhost:3000`.
+
+### 4. Execução com Docker (produção)
+
+1. Gere certificados de desenvolvimento (ou traga os oficiais):
    ```bash
-   git clone https://github.com/memento-marcio-org/Planeja-AI.git
-   cd Planeja-AI
+   bash infra/certificates/generate-certs.sh
    ```
-
-2. **Configure as variáveis de ambiente:**
-
-   - Crie um arquivo `.env` no diretório `backend/` com:
-     ```
-     SUPABASE_URL=sua_url_supabase
-     SUPABASE_KEY=sua_chave_supabase
-     JWT_SECRET=seu_segredo_jwt
-     PORT=3001
-     MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/
-     ```
-
-3. **Execute o banco de dados:**
-
-   - Execute os scripts SQL em `database/script.sql` no seu projeto Supabase
-
-4. **Inicie os containers:**
-
+2. Construa e suba os serviços:
    ```bash
-   docker-compose up --build
+   docker compose up --build -d
    ```
+3. Acesse `https://localhost` (Nginx direciona para frontend/backend).
 
-5. **Acesse a aplicação:**
-   - Frontend: `https://localhost` (HTTPS)
-   - Backend API: `http://localhost:3001`
+### 5. Scripts úteis
+
+- `backend`: `npm run test`, `npm run lint`, `npm run migrate`
+- `frontend`: `npm run lint`, `npm run build`, `npm run start`
 
 ---
 
-## 📚 Documentação da API
+## 📚 Endpoints Principais
 
-### Endpoints principais:
+- **Autenticação**: `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`
+- **Listas/Tarefas**: `GET /api/v1/lists`, `POST /api/v1/lists`, `POST /api/v1/lists/:listId/items`, `GET /api/v1/tasks`, `PUT /api/v1/tasks/:id/complete`
+- **Anexos**: `POST /api/v1/tasks/:taskId/attachments`, `GET /api/v1/tasks/:taskId/attachments`, `PUT /api/v1/tasks/:taskId/attachments/:attachmentId/set-cover`
+- **Chat/IA**: `GET /api/v1/chats`, `POST /api/v1/chats/messages` (stream via Socket.IO)
 
-#### **Autenticação**
-
-- `POST /api/auth/register` - Cadastro de usuário
-- `POST /api/auth/login` - Login e geração de token JWT
-
-#### **Listas**
-
-- `GET /api/lists` - Listar todas as listas do usuário
-- `POST /api/lists` - Criar nova lista
-- `DELETE /api/lists/:id` - Deletar lista
-
-#### **Tarefas**
-
-- `GET /api/tasks/:listId` - Listar tarefas de uma lista
-- `POST /api/tasks` - Criar nova tarefa
-- `PUT /api/tasks/:id` - Atualizar tarefa
-- `DELETE /api/tasks/:id` - Deletar tarefa
-
-#### **Anexos (MongoDB Atlas)**
-
-- `POST /api/attachments/upload` - Upload de arquivos para tarefas
-- `GET /api/attachments/task/:taskId` - Listar anexos de uma tarefa
-- `DELETE /api/attachments/:id` - Remover anexo
-- `PUT /api/attachments/:id/cover` - Definir imagem como capa da tarefa
-- `GET /api/attachments/:id/file` - Download de arquivo anexado
-- `GET /api/attachments/:id/thumbnail` - Download de thumbnail (imagens)
-
----
-
-## 🎯 Objetivo da Documentação (José Eduardo)
-
-Como responsável pela **Documentação** do projeto, minha contribuição foca em:
-
-### **1. Documentação Técnica Completa**
-
-- Criação e manutenção do README principal do projeto
-- Documentação da arquitetura e decisões técnicas
-- Diagramas de fluxo e estrutura de dados
-- Guias de instalação e configuração
-
-### **2. Documentação da API**
-
-- Especificação detalhada de todos os endpoints
-- Exemplos de requisições e respostas
-- Códigos de status HTTP e tratamento de erros
-- Schemas de validação de dados
-
-### **3. Guias para Desenvolvedores**
-
-- Boas práticas de contribuição ao projeto
-- Padrões de código e convenções de nomenclatura
-- Fluxo de trabalho com Git e GitHub
-- Instruções para setup do ambiente de desenvolvimento
-
-### **4. Documentação de Infraestrutura**
-
-- Configuração do Docker e Docker Compose
-- Setup do Nginx e certificados SSL
-- Variáveis de ambiente necessárias
-- Troubleshooting de problemas comuns
-
-### **5. Integração com o Projeto Final**
-
-Minha documentação garante que:
-
-- Todos os membros do grupo entendam a estrutura do projeto
-- Novos desenvolvedores possam configurar o ambiente rapidamente
-- A API seja consumida corretamente pelo frontend
-- A infraestrutura seja replicável em diferentes ambientes
-- O projeto tenha material de referência profissional para apresentação
-
-A documentação serve como ponte entre todas as áreas (Backend, Frontend, DevOps, UI/UX), facilitando a integração e colaboração da equipe.
+Todos os endpoints (exceto autenticação) exigem bearer token ou cookie de sessão válido.
 
 ---
 
 ## 📄 Licença
 
-Este projeto foi desenvolvido como trabalho acadêmico e é de uso educacional.
+Projeto acadêmico para a disciplina **Desenvolvimento Web 2** – uso educacional.
 
 ---
 
 ## 🔗 Links Úteis
 
-- [Repositório da Organização](https://github.com/memento-marcio-org/Planeja-AI)
-- [Documentação do Next.js](https://nextjs.org/docs)
-- [Documentação do Supabase](https://supabase.com/docs)
-- [Express.js Guide](https://expressjs.com/)
+- [Vídeo de demonstração funcional do sistema](https://youtu.be/yfAoe_wbHqg)
+- [Next.js Docs](https://nextjs.org/docs)
+- [Supabase Docs](https://supabase.com/docs)
+- [Express.js](https://expressjs.com/)
+- [LangChain Docs](https://js.langchain.com/docs/)

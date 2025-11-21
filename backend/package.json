@@ -6,10 +6,12 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon",
-    "build": "tsc",
+    "build": "tsc && node scripts/copyAssets.cjs",
     "start": "node dist/server.js",
     "start:dev": "ts-node server.ts",
     "migrate": "[ -z \"$DATABASE_URL\" ] && echo \"Set DATABASE_URL before running migrations\" || psql $DATABASE_URL -f database/migrations/2025-11-12_add_refresh_tokens.sql",
+    "db:schema": "node scripts/runSql.cjs database/schema.sql",
+    "migrate:supabase": "node scripts/runMigrations.cjs",
     "test": "vitest",
     "clean": "rimraf dist",
     "lint": "eslint src/**/*.ts"
@@ -22,7 +24,7 @@
     "planeja-ai"
   ],
   "dependencies": {
-    "@langchain/openai": "^0.3.0",
+    "@google/generative-ai": "^0.24.1",
     "@socket.io/redis-adapter": "^7.1.0",
     "@supabase/supabase-js": "^2.58.0",
     "@types/multer": "^2.0.0",
@@ -37,10 +39,9 @@
     "helmet": "^8.1.0",
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
-    "langchain": "^0.0.207",
     "mongodb": "^5.9.2",
     "multer": "^2.0.2",
-    "openai": "^4.8.0",
+    "pg": "^8.16.3",
     "sharp": "^0.34.5",
     "socket.io": "^4.7.2"
   },

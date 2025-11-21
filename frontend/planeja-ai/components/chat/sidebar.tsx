@@ -1,27 +1,41 @@
-"use client"
+"use client";
 
 import * as React from "react";
 import api from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-type ChatItem = {
+export type ChatItem = {
   id: string;
   title: string;
   lastMessage?: string;
 };
 
+type ChatCreateResponse = {
+  data?: Record<string, unknown>;
+} & Record<string, unknown>;
+
 export default function ChatSidebar({
   className,
   onSelect,
+  onDataChange,
 }: {
   className?: string;
   onSelect?: (id: string) => void;
+  onDataChange?: (chats: ChatItem[]) => void;
 }) {
   const [chats, setChats] = React.useState<ChatItem[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [creating, setCreating] = React.useState(false);
 
   React.useEffect(() => {
     let mounted = true;
@@ -34,17 +48,23 @@ export default function ChatSidebar({
         const list: unknown = data?.data ?? data ?? [];
         const normalized = (Array.isArray(list) ? list : []).map((c) => {
           const item = c as Record<string, unknown>;
-          const id = String(item['id'] ?? item['chat_id'] ?? item['uuid'] ?? '');
-          const titleRaw = item['title'] ?? item['name'] ?? undefined;
-          const lastMessageRaw = item['last_message'] ?? item['lastMessage'] ?? undefined;
-          const title = typeof titleRaw === 'string' ? titleRaw : `Chat ${id}`;
-          const lastMessage = typeof lastMessageRaw === 'string' ? lastMessageRaw : undefined;
+          const id = String(
+            item["id"] ?? item["chat_id"] ?? item["uuid"] ?? ""
+          );
+          const titleRaw = item["title"] ?? item["name"] ?? undefined;
+          const lastMessageRaw =
+            item["last_message"] ?? item["lastMessage"] ?? undefined;
+          const title = typeof titleRaw === "string" ? titleRaw : `Chat ${id}`;
+          const lastMessage =
+            typeof lastMessageRaw === "string" ? lastMessageRaw : undefined;
           return { id, title, lastMessage } as ChatItem;
         });
         setChats(normalized);
+        onDataChange?.(normalized);
       } catch (err) {
         // keep console error for visibility
         console.error("Failed to load chats", err);
+        toast.error("Não foi possível carregar os seus chats.");
       } finally {
         setLoading(false);
       }
@@ -53,7 +73,40 @@ export default function ChatSidebar({
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [onDataChange]);
+
+  const handleNewChat = async () => {
+    try {
+      setCreating(true);
+      const response = await api.chats.create();
+      if (!response.ok) throw new Error("Falha ao criar chat");
+      const payload = response.data as ChatCreateResponse | null;
+      const chatData = (payload?.data ?? payload) as Record<
+        string,
+        unknown
+      > | null;
+      const idRaw =
+        chatData?.["id"] ?? chatData?.["chat_id"] ?? chatData?.["uuid"];
+      if (typeof idRaw !== "undefined" && idRaw !== null) {
+        const titleRaw = chatData?.["title"] ?? chatData?.["name"];
+        const newChat: ChatItem = {
+          id: String(idRaw),
+          title: typeof titleRaw === "string" ? titleRaw : "Novo chat",
+        };
+        setChats((prev) => {
+          const next = [newChat, ...prev];
+          onDataChange?.(next);
+          return next;
+        });
+        onSelect?.(String(idRaw));
+      }
+    } catch (err) {
+      console.error("Erro ao criar chat", err);
+      toast.error("Falha ao criar um novo chat.");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <aside
@@ -66,7 +119,9 @@ export default function ChatSidebar({
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
             <CardTitle>Chats</CardTitle>
-            <Button size="sm">New</Button>
+            <Button size="sm" onClick={handleNewChat} disabled={creating}>
+              {creating ? "Criando..." : "Novo"}
+            </Button>
           </div>
         </CardHeader>
 
@@ -77,7 +132,9 @@ export default function ChatSidebar({
 
           <div className="divide-y">
             {loading && (
-              <div className="p-6 text-sm text-muted-foreground">Loading...</div>
+              <div className="p-6 text-sm text-muted-foreground">
+                Loading...
+              </div>
             )}
 
             {!loading && chats.length === 0 && (
@@ -104,7 +161,9 @@ export default function ChatSidebar({
         </CardContent>
 
         <CardFooter>
-          <div className="w-full text-sm text-muted-foreground">Logged as You</div>
+          <div className="w-full text-sm text-muted-foreground">
+            Logged as You
+          </div>
         </CardFooter>
       </Card>
     </aside>

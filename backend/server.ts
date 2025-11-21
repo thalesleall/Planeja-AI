@@ -4,7 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import compression from "compression";
 import dotenv from "dotenv";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 
 // Importar rotas
 import supabaseRoutes from "./src/routes/supabase";
@@ -29,34 +29,39 @@ const limiter = rateLimit({
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "100"), // máximo de 100 requests por IP
   message: {
     error: "Muitas requisições realizadas. Tente novamente em alguns minutos.",
-    retryAfter: "15 minutes"
+    retryAfter: "15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 // Middleware de segurança
-app.use(helmet({
-  crossOriginEmbedderPolicy: false, // Necessário para desenvolvimento
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false, // Necessário para desenvolvimento
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
     },
-  },
-}));
+  })
+);
 
 // Configuração de CORS
-app.use(cors({
-  origin: NODE_ENV === "production" 
-    ? [FRONTEND_URL] 
-    : ["http://localhost:3000", "http://127.0.0.1:3000"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-}));
+app.use(
+  cors({
+    origin:
+      NODE_ENV === "production"
+        ? [FRONTEND_URL]
+        : ["http://localhost:3000", "http://127.0.0.1:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
 
 // Middleware de compressão
 app.use(compression());
@@ -75,8 +80,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString();
   const userAgent = req.get("User-Agent") || "Unknown";
   const ip = req.ip || req.connection.remoteAddress || "Unknown";
-  
-  console.log(`[${timestamp}] ${req.method} ${req.url} - IP: ${ip} - User-Agent: ${userAgent}`);
+
+  console.log(
+    `[${timestamp}] ${req.method} ${req.url} - IP: ${ip} - User-Agent: ${userAgent}`
+  );
   next();
 });
 
@@ -99,12 +106,14 @@ app.get("/health", (req: Request, res: Response) => {
     environment: NODE_ENV,
     version: "1.0.0",
     memory: {
-      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100,
-      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024 * 100) / 100,
+      used:
+        Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100,
+      total:
+        Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) / 100,
     },
-    responseTime: `${Date.now() - res.locals.startTime}ms`
+    responseTime: `${Date.now() - res.locals.startTime}ms`,
   };
-  
+
   res.status(200).json(healthCheck);
 });
 
@@ -118,17 +127,17 @@ app.get("/", (req: Request, res: Response) => {
     endpoints: {
       health: "/health",
       ping: "/ping",
-      api: "/api/v1"
-    }
+      api: "/api/v1",
+    },
   });
 });
 
 // Rota de ping
 app.get("/ping", (req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     message: "pong",
     timestamp: new Date().toISOString(),
-    server: "Planeja-AI Backend"
+    server: "Planeja-AI Backend",
   });
 });
 
@@ -143,7 +152,7 @@ app.get("/api/v1", (req: Request, res: Response) => {
       register: "POST /api/v1/auth/register",
       login: "POST /api/v1/auth/login",
       profile: "GET /api/v1/auth/me",
-      
+
       // Tarefas
       tasks: "GET /api/v1/tasks",
       pendingTasks: "GET /api/v1/tasks/pending",
@@ -151,10 +160,10 @@ app.get("/api/v1", (req: Request, res: Response) => {
       createTask: "POST /api/v1/tasks",
       completeTask: "PUT /api/v1/tasks/:id/complete",
       deleteTask: "DELETE /api/v1/tasks/:id",
-      
+
       // Utilitários
-      supabase: "/api/v1/supabase"
-    }
+      supabase: "/api/v1/supabase",
+    },
   });
 });
 
@@ -174,7 +183,7 @@ app.use("*", (req: Request, res: Response) => {
     error: "Endpoint não encontrado",
     message: `A rota ${req.method} ${req.originalUrl} não existe`,
     timestamp: new Date().toISOString(),
-    availableEndpoints: ["/", "/health", "/ping", "/api/v1"]
+    availableEndpoints: ["/", "/health", "/ping", "/api/v1"],
   });
 });
 
@@ -182,7 +191,7 @@ app.use("*", (req: Request, res: Response) => {
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString();
   const errorId = Date.now().toString(36);
-  
+
   // Log detalhado do erro
   console.error(`[${timestamp}] ERROR ${errorId}:`, {
     message: err.message,
@@ -190,7 +199,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     url: req.url,
     method: req.method,
     ip: req.ip,
-    userAgent: req.get("User-Agent")
+    userAgent: req.get("User-Agent"),
   });
 
   // Resposta baseada no ambiente
@@ -199,7 +208,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     message: NODE_ENV === "development" ? err.message : "Algo deu errado!",
     errorId,
     timestamp,
-    ...(NODE_ENV === "development" && { stack: err.stack })
+    ...(NODE_ENV === "development" && { stack: err.stack }),
   };
 
   res.status(err.status || 500).json(errorResponse);
@@ -211,92 +220,95 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 import https from "https";
 import fs from "fs";
 import { initRealtime } from "./src/lib/realtime";
-import { startRefreshTokenCleanup } from './src/jobs/refreshTokenCleanup';
+import { startRefreshTokenCleanup } from "./src/jobs/refreshTokenCleanup";
 
 const certPath = "/etc/nginx/certs/fullchain.pem";
 const keyPath = "/etc/nginx/certs/privkey.pem";
-let server;
+const isTestEnv = NODE_ENV === "test";
+let server: any;
 
-if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
-  const options = {
-    cert: fs.readFileSync(certPath),
-    key: fs.readFileSync(keyPath),
-  };
-  server = https.createServer(options, app).listen(PORT, () => {
-    console.log(`
+if (!isTestEnv) {
+  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    const options = {
+      cert: fs.readFileSync(certPath),
+      key: fs.readFileSync(keyPath),
+    };
+    server = https.createServer(options, app).listen(PORT, () => {
+      console.log(`
 🚀 Planeja-AI Backend Server iniciado com sucesso!
 📍 URL: https://localhost:${PORT}
 🌍 Ambiente: ${NODE_ENV}
 📊 Health Check: https://localhost:${PORT}/health
 🔄 API v1: https://localhost:${PORT}/api/v1
 ⏰ Iniciado em: ${new Date().toISOString()}
-    `);
-  });
-} else {
-  server = app.listen(PORT, () => {
-    console.log(`
+      `);
+    });
+  } else {
+    server = app.listen(PORT, () => {
+      console.log(`
 🚀 Planeja-AI Backend Server iniciado com sucesso!
 📍 URL: http://localhost:${PORT}
 🌍 Ambiente: ${NODE_ENV}
 📊 Health Check: http://localhost:${PORT}/health
 🔄 API v1: http://localhost:${PORT}/api/v1
 ⏰ Iniciado em: ${new Date().toISOString()}
-    `);
+      `);
+    });
+  }
+
+  // Initialize realtime after server is created
+  initRealtime(server as any).catch((err) => {
+    console.error("Failed to initialize realtime:", err);
+  });
+
+  // Initialize MongoDB for attachments
+  connectMongoDB()
+    .then(() => {
+      initAttachmentModel();
+      console.log("✅ MongoDB attachment system ready");
+    })
+    .catch((err) => {
+      console.warn("⚠️ MongoDB not available. Attachments will be disabled.");
+      console.warn(
+        "💡 To enable attachments, install MongoDB: docker run -d -p 27017:27017 mongo"
+      );
+    });
+
+  // Start in-process refresh-token cleanup job (removes expired refresh tokens)
+  // Returns a stop function if needed.
+  try {
+    startRefreshTokenCleanup();
+  } catch (e) {
+    console.error("Failed to start refresh token cleanup job", e);
+  }
+
+  // Graceful shutdown
+  process.on("SIGTERM", () => {
+    console.log("🛑 SIGTERM recebido. Encerrando servidor graciosamente...");
+    server.close(() => {
+      console.log("✅ Servidor encerrado com sucesso.");
+      process.exit(0);
+    });
+  });
+
+  process.on("SIGINT", () => {
+    console.log("🛑 SIGINT recebido. Encerrando servidor graciosamente...");
+    server.close(() => {
+      console.log("✅ Servidor encerrado com sucesso.");
+      process.exit(0);
+    });
+  });
+
+  // Tratamento de erros não capturados
+  process.on("uncaughtException", (err) => {
+    console.error("❌ Uncaught Exception:", err);
+    process.exit(1);
+  });
+
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+    process.exit(1);
   });
 }
-
-// Initialize realtime after server is created
-initRealtime(server as any).catch((err) => {
-  console.error('Failed to initialize realtime:', err);
-});
-
-// Initialize MongoDB for attachments
-connectMongoDB()
-  .then(() => {
-    initAttachmentModel();
-    console.log('✅ MongoDB attachment system ready');
-  })
-  .catch((err) => {
-    console.warn('⚠️ MongoDB not available. Attachments will be disabled.');
-    console.warn('💡 To enable attachments, install MongoDB: docker run -d -p 27017:27017 mongo');
-  });
-
-// Note: cookieParser is mounted earlier in the middleware chain; do not mount twice.
-
-// Start in-process refresh-token cleanup job (removes expired refresh tokens)
-// Returns a stop function if needed.
-try {
-  startRefreshTokenCleanup();
-} catch (e) {
-  console.error('Failed to start refresh token cleanup job', e);
-}
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("🛑 SIGTERM recebido. Encerrando servidor graciosamente...");
-  server.close(() => {
-    console.log("✅ Servidor encerrado com sucesso.");
-    process.exit(0);
-  });
-});
-
-process.on("SIGINT", () => {
-  console.log("🛑 SIGINT recebido. Encerrando servidor graciosamente...");
-  server.close(() => {
-    console.log("✅ Servidor encerrado com sucesso.");
-    process.exit(0);
-  });
-});
-
-// Tratamento de erros não capturados
-process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught Exception:", err);
-  process.exit(1);
-});
-
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
-  process.exit(1);
-});
 
 export default app;

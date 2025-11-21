@@ -1,11 +1,16 @@
 -- Migration: add refresh tokens table to support rotating refresh tokens
-CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token TEXT NOT NULL,
-  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+create table if not exists auth_refresh_tokens (
+   id         uuid default gen_random_uuid() primary key,
+   user_id    bigint not null
+      references users ( id )
+         on delete cascade,
+   token      text not null,
+   expires_at timestamp with time zone not null,
+   created_at timestamp with time zone default now()
 );
 
 -- Optional index for token lookup
-CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_token ON auth_refresh_tokens(token);
+create index if not exists idx_auth_refresh_tokens_token on
+   auth_refresh_tokens (
+      token
+   );

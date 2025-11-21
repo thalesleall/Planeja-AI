@@ -1,52 +1,46 @@
-'use client'
+"use client";
 
-import { Paperclip } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useState } from 'react'
+import { Paperclip } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
 interface AttachmentButtonProps {
-  taskId: string
-  attachmentCount: number
-  onAttachmentsChange: () => void
+  taskId: string;
+  attachmentCount: number;
+  onAttachmentsChange: () => void;
 }
 
-export function AttachmentButton({ taskId, attachmentCount, onAttachmentsChange }: AttachmentButtonProps) {
-  const [isUploading, setIsUploading] = useState(false)
+export function AttachmentButton({
+  taskId,
+  attachmentCount,
+  onAttachmentsChange,
+}: AttachmentButtonProps) {
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    setIsUploading(true)
+    setIsUploading(true);
     try {
-      for (const file of Array.from(files)) {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('taskId', taskId)
-
-        const response = await fetch('/api/attachments/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: formData
-        })
-
-        if (!response.ok) {
-          throw new Error('Erro ao fazer upload')
-        }
+      const payload = Array.from(files);
+      const response = await api.attachments.upload(taskId, payload);
+      if (!response.ok) {
+        throw new Error("Erro ao fazer upload");
       }
-      
-      onAttachmentsChange()
+      onAttachmentsChange();
+      toast.success("Anexos enviados com sucesso!");
     } catch (error) {
-      console.error('Erro ao fazer upload:', error)
-      alert('Erro ao fazer upload dos anexos')
+      console.error("Erro ao fazer upload:", error);
+      toast.error("Erro ao fazer upload dos anexos");
     } finally {
-      setIsUploading(false)
-      e.target.value = ''
+      setIsUploading(false);
+      e.target.value = "";
     }
-  }
+  };
 
   return (
     <div className="relative inline-block">
@@ -82,5 +76,5 @@ export function AttachmentButton({ taskId, attachmentCount, onAttachmentsChange 
         </Button>
       </label>
     </div>
-  )
+  );
 }

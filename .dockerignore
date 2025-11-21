@@ -3,6 +3,9 @@
 **/node_modules
 **/.next
 **/dist
+*.png
+*.jpg
+*.mp4
 
 # Ignore backend files for frontend build
 backend/

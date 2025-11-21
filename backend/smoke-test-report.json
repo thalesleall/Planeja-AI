@@ -1,0 +1,120 @@
+{
+  "timestamp": "2025-11-21T00:46:17.875Z",
+  "email": "qa+1763685974610@example.com",
+  "results": [
+    {
+      "path": "/auth/register",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body": {
+        "success": true,
+        "message": "Usuário criado com sucesso",
+        "user": {
+          "id": 15,
+          "name": "QA Bot",
+          "email": "qa+1763685974610@example.com"
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE1IiwiZW1haWwiOiJxYSsxNzYzNjg1OTc0NjEwQGV4YW1wbGUuY29tIiwibmFtZSI6IlFBIEJvdCIsImlhdCI6MTc2MzY4NTk3NSwiZXhwIjoxNzYzNzcyMzc1fQ.KmhQRUmFbIx37UkA6uSCReu0xdZ0fj7vnaJG5dtT8bU"
+      }
+    },
+    {
+      "path": "/auth/login",
+      "method": "POST",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "success": true,
+        "message": "Login realizado com sucesso",
+        "user": {
+          "id": 15,
+          "name": "QA Bot",
+          "email": "qa+1763685974610@example.com"
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE1IiwiZW1haWwiOiJxYSsxNzYzNjg1OTc0NjEwQGV4YW1wbGUuY29tIiwibmFtZSI6IlFBIEJvdCIsImlhdCI6MTc2MzY4NTk3NiwiZXhwIjoxNzYzNzcyMzc2fQ.hh5t0Whd38QaGOgk82qkI3p-a8-IChwNUcbKv46lOV0"
+      }
+    },
+    {
+      "path": "/auth/me",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "success": true,
+        "message": "Perfil obtido com sucesso",
+        "user": {
+          "id": 15,
+          "name": "QA Bot",
+          "email": "qa+1763685974610@example.com"
+        }
+      }
+    },
+    {
+      "path": "/auth/refresh",
+      "method": "POST",
+      "status": 401,
+      "ok": false,
+      "body": {
+        "success": false,
+        "message": "Invalid refresh token"
+      }
+    },
+    {
+      "path": "/lists",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body": {
+        "success": true,
+        "message": "Lista criada com sucesso",
+        "list": {
+          "id": 12,
+          "owner_id": 15
+        }
+      }
+    },
+    {
+      "path": "/lists/12/items",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body": {
+        "success": true,
+        "message": "Tarefa criada com sucesso",
+        "item": {
+          "id": 27,
+          "list_id": 12,
+          "item_order": 1,
+          "name": "Primeira tarefa",
+          "description": "Gerada pelo teste automático",
+          "done": false
+        }
+      }
+    },
+    {
+      "path": "/tasks",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "success": true,
+        "message": "1 tarefa(s) encontrada(s)",
+        "items": [
+          {
+            "id": 27,
+            "list_id": 12,
+            "item_order": 1,
+            "name": "Primeira tarefa",
+            "description": "Gerada pelo teste automático",
+            "done": false,
+            "to_do_list": {
+              "id": 12,
+              "owner_id": 15
+            }
+          }
+        ],
+        "total": 1
+      }
+    }
+  ]
+}

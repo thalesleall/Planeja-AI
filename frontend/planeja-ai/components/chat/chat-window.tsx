@@ -1,77 +1,171 @@
-"use client"
+"use client";
 
 import * as React from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
+import type { Socket } from "socket.io-client";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "../ui/card";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+type ChatMessage = { id?: string; role: string; content: string };
+
+type RawChatMessage = {
+  id?: string;
+  uuid?: string;
+  role?: string;
+  sender?: string;
+  user_id?: string | number | null;
+  content?: string;
+  text?: string;
+  message?: string;
+};
+
+type ChatMessagesResponse = {
+  data?: RawChatMessage[];
+  items?: RawChatMessage[];
+};
+
+type ChatStreamPayload = {
+  chatId?: string | number;
+  token?: string;
+  text?: string;
+};
+
+type SendMessageResponse = {
+  data?: { chat_id?: string | number };
+  chat_id?: string | number;
+};
+
+const extractRawMessages = (payload: unknown): RawChatMessage[] => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload as RawChatMessage[];
+  if (typeof payload === "object") {
+    const typed = payload as ChatMessagesResponse & { data?: unknown };
+    const dataField = typed.data;
+    if (Array.isArray(dataField)) return dataField;
+    if (dataField && typeof dataField === "object") {
+      const nestedItems = (dataField as ChatMessagesResponse).items;
+      if (Array.isArray(nestedItems)) return nestedItems;
+    }
+    const itemsField = typed.items;
+    if (Array.isArray(itemsField)) return itemsField;
+  }
+  return [];
+};
+
+const normalizeMessage = (
+  raw: RawChatMessage,
+  currentUserId?: string | null
+): ChatMessage => {
+  const id =
+    typeof raw.id === "string"
+      ? raw.id
+      : typeof raw.uuid === "string"
+      ? raw.uuid
+      : undefined;
+  const fallbackRole =
+    raw.user_id && currentUserId && String(raw.user_id) === currentUserId
+      ? "user"
+      : "assistant";
+  const role = raw.role ?? raw.sender ?? fallbackRole;
+  const content =
+    raw.content ??
+    raw.text ??
+    (raw.message !== undefined ? String(raw.message) : "");
+  return { id, role, content };
+};
+
+const extractChatId = (payload: unknown): string | number | null => {
+  if (!payload || typeof payload !== "object") return null;
+  const typed = payload as SendMessageResponse;
+  return typed.data?.chat_id ?? typed.chat_id ?? null;
+};
 
 export default function ChatWindow({
   className,
   title,
   chatId,
   userId,
+  onChatCreated,
 }: {
   className?: string;
   title?: string;
   chatId?: string | null;
   userId?: string | null;
+  onChatCreated?: (chatId: string) => void;
 }) {
   const [message, setMessage] = React.useState("");
-  const [messages, setMessages] = React.useState<Array<{ id?: string; role: string; content: string }>>([]);
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [streaming, setStreaming] = React.useState("");
 
   React.useEffect(() => {
-    if (!chatId) return;
+    if (!chatId) {
+      setMessages([]);
+      setStreaming("");
+      return;
+    }
     let mounted = true;
-    import('@/lib/api').then(async ({ default: api }) => {
-      try {
-        const res = await api.chats.getMessages(chatId);
-        if (!mounted) return;
-        if (!res.ok) {
-          console.error('failed to load messages', res.status, res.data);
-          return;
+    import("@/lib/api")
+      .then(async ({ default: api }) => {
+        try {
+          const res = await api.chats.getMessages(chatId);
+          if (!mounted) return;
+          if (!res.ok) {
+            console.error("failed to load messages", res.status, res.data);
+            toast.error("Falha ao carregar as mensagens do chat.");
+            return;
+          }
+          const normalized = extractRawMessages(res.data).map((raw) =>
+            normalizeMessage(raw, userId)
+          );
+          setMessages(normalized);
+        } catch (err) {
+          console.error("failed to load messages", err);
+          toast.error("Erro ao buscar mensagens do chat.");
         }
-        const list = res.data?.data ?? res.data?.items ?? res.data ?? [];
-        const normalized = (Array.isArray(list) ? list : []).map((m: any) => ({
-          id: m.id ?? m.uuid,
-          role: m.role ?? m.sender ?? (m.user_id ? 'user' : 'assistant'),
-          content: m.content ?? m.text ?? String(m.message ?? ''),
-        }));
-        setMessages(normalized);
-      } catch (err) {
-        console.error('failed to load messages', err);
-      }
-    }).catch((err) => console.error('failed to import api', err));
+      })
+      .catch((err) => console.error("failed to import api", err));
 
     return () => {
       mounted = false;
     };
-  }, [chatId]);
+  }, [chatId, userId]);
 
   // socket streaming
   React.useEffect(() => {
-    let socket: any;
-    let connected = false;
+    let activeSocket: Socket | null = null;
     async function setup() {
-      const { initSocket, getSocket } = await import("@/lib/socket");
-      socket = initSocket();
-      socket.on("connect", () => {
-        connected = true;
-      });
-
-      socket.on("chat:stream:token", (payload: any) => {
+      const { initSocket } = await import("@/lib/socket");
+      try {
+        activeSocket = initSocket();
+      } catch (err) {
+        console.warn("Socket init error", err);
+        toast.error("Não foi possível conectar ao chat em tempo real.");
+        return;
+      }
+      activeSocket.on("chat:stream:token", (payload: ChatStreamPayload) => {
         // payload { chatId, userId, token }
         if (!payload) return;
-        if (chatId && String(payload.chatId) !== String(chatId)) return;
+        if (!chatId) return;
+        if (String(payload.chatId) !== String(chatId)) return;
         setStreaming((s) => s + String(payload.token ?? ""));
       });
 
-      socket.on("chat:stream:done", (payload: any) => {
-        if (chatId && String(payload.chatId) !== String(chatId)) return;
-        const finalText = payload?.text ?? streaming;
-        setMessages((m) => [...m, { role: "assistant", content: finalText }]);
-        setStreaming("");
+      activeSocket.on("chat:stream:done", (payload: ChatStreamPayload) => {
+        if (!chatId) return;
+        if (String(payload?.chatId) !== String(chatId)) return;
+        setStreaming((current) => {
+          const finalText = payload?.text ?? current;
+          setMessages((m) => [...m, { role: "assistant", content: finalText }]);
+          return "";
+        });
       });
     }
 
@@ -79,28 +173,38 @@ export default function ChatWindow({
 
     return () => {
       try {
-        if (socket) {
-          socket.off("chat:stream:token");
-          socket.off("chat:stream:done");
+        if (activeSocket) {
+          activeSocket.off("chat:stream:token");
+          activeSocket.off("chat:stream:done");
         }
-      } catch (e) {}
+      } catch {}
     };
   }, [chatId]);
 
   function sendMessage() {
     if (!message || !chatId) return;
-  // optimistic append
-  setMessages((m) => [...m, { role: 'user', content: message }]);
+    // optimistic append
+    setMessages((m) => [...m, { role: "user", content: message }]);
     setMessage("");
 
-    import('@/lib/api').then(async ({ default: api }) => {
-      try {
-        await api.chats.postMessage({ chat_id: chatId, message });
-        // server will stream tokens via socket; final persisted assistant message will be appended on stream:done
-      } catch (err) {
-        console.error('send failed', err);
-      }
-    }).catch((err) => console.error('send failed', err));
+    import("@/lib/api")
+      .then(async ({ default: api }) => {
+        try {
+          const response = await api.chats.postMessage({
+            chat_id: chatId,
+            message,
+          });
+          const serverChatId = extractChatId(response.data);
+          if (serverChatId && String(serverChatId) !== String(chatId)) {
+            onChatCreated?.(String(serverChatId));
+          }
+          // server will stream tokens via socket; final persisted assistant message will be appended on stream:done
+        } catch (err) {
+          console.error("send failed", err);
+          toast.error("Não conseguimos enviar sua mensagem.");
+        }
+      })
+      .catch((err) => console.error("send failed", err));
   }
 
   return (
@@ -115,14 +219,20 @@ export default function ChatWindow({
             {messages.map((m, idx) => (
               <div
                 key={m.id ?? idx}
-                className={m.role === "user" ? "self-end bg-primary/10 rounded-md px-3 py-2 max-w-[80%]" : "self-start bg-accent/10 rounded-md px-3 py-2 max-w-[80%]"}
+                className={
+                  m.role === "user"
+                    ? "self-end bg-primary/10 rounded-md px-3 py-2 max-w-[80%]"
+                    : "self-start bg-accent/10 rounded-md px-3 py-2 max-w-[80%]"
+                }
               >
                 {m.content}
               </div>
             ))}
 
             {streaming && (
-              <div className="self-start bg-accent/10 rounded-md px-3 py-2 max-w-[80%]">{streaming}</div>
+              <div className="self-start bg-accent/10 rounded-md px-3 py-2 max-w-[80%]">
+                {streaming}
+              </div>
             )}
           </div>
         </CardContent>
@@ -132,7 +242,9 @@ export default function ChatWindow({
             <Input
               placeholder="Type a message..."
               value={message}
-              onChange={(e: any) => setMessage(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setMessage(e.target.value)
+              }
             />
             <Button onClick={sendMessage}>Send</Button>
           </div>
